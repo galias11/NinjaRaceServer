@@ -1,0 +1,27 @@
+{
+  "name": "ninja_race_server",
+  "version": "1.0.0",
+  "description": "Servidor para el modo online del juego ninja race",
+  "main": "server_main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/galias11/NinjaRace.git"
+  },
+  "author": "@GAlias",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/galias11/NinjaRace/issues"
+  },
+  "homepage": "https://github.com/galias11/NinjaRace#readme",
+  "dependencies": {
+    "csrf": "^3.0.6",
+    "hapi": "^17.4.0",
+    "hapi-auth-cookie": "^8.1.0",
+    "joi": "^13.3.0",
+    "mysql": "^2.15.0",
+    "password-hash": "^1.2.2"
+  }
+}

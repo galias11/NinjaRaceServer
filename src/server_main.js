@@ -59,7 +59,6 @@ async function serverInitialize() {
   server.method('dlgPlayer', controller.dlgPlayer, {});
   server.method('getSessionData', controller.getSessionData, {});
   server.method('joinQueue', controller.joinQueue, {});
-  server.method('validatePortData', controller.validatePortData, {});
   server.method('leaveQueue', controller.leaveQueue, {});
 
   //Server authentication settings

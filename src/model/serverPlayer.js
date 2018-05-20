@@ -11,12 +11,17 @@ class Player {
     this.sessionNick = '';
     this.sessionAvatar = undefined;
     this.inactiveTime = 0;
+    this.sessionPort = '';
+    this.sessionIp = '';
+    this.queueArrivalTime = 0.0;
+    this.sessionValidated = false;
   }
 
   //Creates a token for the player an stores secret for further validation
   generateToken() {
     const token = generateToken();
     this.secret = token.secret;
+    this.token = token.token;
 
     return token.token;
   }
@@ -28,6 +33,11 @@ class Player {
   setSessionData(avatar, nick) {
     this.sessionNick = nick;
     this.sessionAvatar = avatar;
+  }
+
+  //Validates player token
+  validate(token) {
+    return validateToken(token, this.secret);
   }
 
 }

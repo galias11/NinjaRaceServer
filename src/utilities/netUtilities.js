@@ -15,6 +15,7 @@ const {
   SESSION_TYPE_UDP_END,
   SESSION_TYPE_UDP_CHECK_PORT,
   SESSION_TYPE_UDP_CREATED,
+  SESSION_TYPE_UDP_START,
   ARGENTINA_NTP_POOL
 } = require('../constants');
 
@@ -84,11 +85,25 @@ const sendAbortData = (ip, port) => {
 
   client.send(message, 0, message.length, port, ip, (err, bytes) => {
     if(err) {
-      logger(`error while sending session data to ${ip}:${port}`);
-      logger(`sent abort data (${bytes}b) to ${ip}:${port}`);
+      logger(`error while sending abort data to ${ip}:${port}`);
     }
+    logger(`sent abort data (${bytes}b) to ${ip}:${port}`);
     client.close();
   });
+}
+
+//Sends start data to the requested destination
+const sendStartData = (ip, port, time) => {
+  const client = dgram.createSocket('udp4');
+  const message = udpMessage(SESSION_TYPE_UDP_START, time);
+
+  client.send(message, 0, message.length, port, ip, (err, bytes) => {
+    if(err) {
+      logger(`error while sending sync data to ${ip}:${port}`);
+    }
+    logger(`sent sync data (${bytes}b) to ${ip}:${port}`);
+    client.close();
+  })
 }
 
 //Creates a publisher for a game session.
@@ -107,9 +122,34 @@ const createPublisher = callback => {
     });
 }
 
+const getNTPTime = (callback) => {
+  const options = {
+    host: ARGENTINA_NTP_POOL,
+    port: 123,
+    resolveReference: true,
+    timeout: 2000
+  };
+
+  const exec = async function () {
+    try {
+      const time = await sntp.time(options);
+      const localTime = new Date()
+      const ntpTime = localTime.getTime() + time.t;
+      callback({error: false, ntpTime: ntpTime});
+    }
+    catch (err) {
+      callback({error: true});
+    }
+  };
+
+  exec();
+}
+
 module.exports = {
   createPublisher,
+  getNTPTime,
   sendAbortData,
   sendSessionData,
+  sendStartData,
   validateSessionPortUDP
 }

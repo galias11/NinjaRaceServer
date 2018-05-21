@@ -36,7 +36,7 @@ const replyText = {
   SERVER_REPLY_ERR06: 'Failed to retrieve data',
   SERVER_REPLY_ERR07: 'Player not logged in',
   SERVER_REPLY_ERR08: 'Cant\'t validate session port',
-  SERVER_REPLY_ERR09: 'Player already waiting in queue',
+  SERVER_REPLY_ERR09: 'Player already in a waiting queue or session',
   SERVER_REPLY_UNK_TEXT: 'Internal error'
 }
 

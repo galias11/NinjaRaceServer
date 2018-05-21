@@ -2,12 +2,14 @@
 const {
   createPublisher,
   sendAbortData,
-  sendSessionData
+  sendSessionData,
+  sendStartData
 } = require('../utilities');
 
 // @Constants
 const {
   SESSION_MSG_TYPE_ABORT,
+  SESSION_MSG_CLIENT_LOAD_FINISHED,
   SESSION_MSG_TYPE_CREATE,
   SESSION_MSG_TYPE_END,
   SESSION_MSG_TYPE_ERR,
@@ -15,7 +17,9 @@ const {
   SESSION_MSG_TYPE_INFO,
   SESSION_MSG_TYPE_INIT_SENT,
   SESSION_MSG_TYPE_CREATED,
+  SESSION_MSG_TYPE_START,
   SESSION_TYPE_UDP_ACK,
+  SESSION_TYPE_UDP_LOAD_FINISH,
   SERVER_MIN_GAME_PLAYERS
 } = require('../constants');
 
@@ -29,6 +33,8 @@ process.on('message', data => {
     case SESSION_MSG_TYPE_ABORT:
       abortSession(data.payload);
       break;
+    case SESSION_MSG_TYPE_START:
+      startSession(data.payload);
     default:
       break;
   }
@@ -69,6 +75,13 @@ const abortSession = (playersData) => {
   }, 5000);
 }
 
+//Sends the start time with sincronization time
+const startSession = (payload) => {
+  payload.players.forEach(player => {
+    sendStartData(player.sessionIp, player.sessionPort, payload.startTime);
+  });
+}
+
 //Sends session data to players and waits for players subscription to pubber
 const validateSession = (players, levelId, token, port) => {
   if(players.length >= SERVER_MIN_GAME_PLAYERS && port && token && levelId) {
@@ -98,6 +111,9 @@ const handlePublisherIncomingData = data => {
   switch(data.type){
     case SESSION_TYPE_UDP_ACK:
       process.send(buildMessage(SESSION_MSG_TYPE_INIT_SUCCESS, data.payload));
+      break;
+    case SESSION_TYPE_UDP_LOAD_FINISH:
+      process.send(buildMessage(SESSION_MSG_CLIENT_LOAD_FINISHED, data.payload));
       break;
     default:
       break;

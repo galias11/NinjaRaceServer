@@ -35,6 +35,7 @@ const {
   SERVER_MIN_GAME_PLAYERS,
   SERVER_MIN_SESSION_PLAYERS,
   SESSION_ACTION_ABORT,
+  SESSION_ACTION_START,
   SESSION_ACTION_VALIDATE
 } = require('../constants');
 
@@ -60,6 +61,7 @@ class Controller {
     this.queueObserver = this.queueObserver.bind(this);
     this.registerPlayer = this.registerPlayer.bind(this);
     this.validateSession = this.validateSession.bind(this);
+    this.validateStart = this.validateStart.bind(this);
     this.validateLevelData = this.validateLevelData.bind(this);
     this.validatePlayerData = this.validatePlayerData.bind(this);
   }
@@ -269,7 +271,7 @@ class Controller {
         queueData.queue.addPlayer(playerData.player, sessionIp, sessionPort);
         logger('client listener check successful')
         reply = this.buildReplyData(SERVER_SERVICE_JQR, 1, {queueId: queueData.queue.levelId});
-      } else if(playerData.inQueue) {
+      } else if(playerData.inQueue || playerData.inSession) {
         reply = this.buildReplyData(SERVER_SERVICE_JQR, 3);
       } else {
         reply = this.buildReplyData(SERVER_SERVICE_CRO, 2);
@@ -299,12 +301,16 @@ class Controller {
     const playerInQueue = this.queues.find(queue => {
       return queue.playerInQueue(playerId);
     });
+    const playerInGameSession = this.gameSessions.find(session => {
+      return session.playerInSession(playerId);
+    });
     const avatar = findAvatarById(avatarId, this.avatars);
 
-    const valid = player && !playerInQueue && avatar;
+    const valid = player && !playerInQueue && !playerInGameSession && avatar;
     return {
       valid: valid,
       inQueue: playerInQueue,
+      inSession: playerInGameSession,
       player: player,
       avatar: avatar
     }
@@ -366,6 +372,9 @@ class Controller {
       case SESSION_ACTION_ABORT:
         this.abortSession(gameSession);
         break;
+      case SESSION_ACTION_START:
+        this.validateStart(gameSession);
+        break;
       default:
         break;
     }
@@ -377,7 +386,21 @@ class Controller {
     const gameSessionId = gameSession.sessionId;
     logger(`processing game session ${gameSession.sessionId} validation`);
     if(validatedPlayers >= SERVER_MIN_GAME_PLAYERS) {
-      logger(`game session ${gameSessionId} started with ${validatedPlayers} players`);
+      logger(`game session ${gameSessionId} initialized with ${validatedPlayers} players`);
+      gameSession.startGame();
+    } else {
+      logger(`game session ${gameSessionId} aborted due to not enough validated players`);
+      gameSession.abortGame();
+    }
+  }
+
+  //Validates if a game can be started
+  validateStart(gameSession) {
+    const readyPlayers = gameSession.readyPlayers;
+    const gameSessionId = gameSession.sessionId;
+    logger(`processing game session ${gameSession.sessionId} sync`);
+    if(readyPlayers >= SERVER_MIN_GAME_PLAYERS) {
+      logger(`game session ${gameSessionId} synchronized for ${readyPlayers} players`);
       gameSession.startGame();
     } else {
       logger(`game session ${gameSessionId} aborted due to not enough validated players`);

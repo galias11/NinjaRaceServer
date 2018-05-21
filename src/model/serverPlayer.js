@@ -15,6 +15,7 @@ class Player {
     this.sessionIp = '';
     this.queueArrivalTime = 0.0;
     this.sessionValidated = false;
+    this.sessionReady = false;
   }
 
   //Creates a token for the player an stores secret for further validation

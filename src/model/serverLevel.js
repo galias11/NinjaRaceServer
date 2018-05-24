@@ -1,10 +1,11 @@
 class Level {
-  constructor(id, clientFile, token, secret) {
+  constructor(id, clientFile, startingPosX, startingPosY, startingDirectionId) {
     this.id = id;
     this.clientFile = clientFile;
-    this.token = token;
-    this.secret = secret;
     this.available = true;
+    this.startingPosX = startingPosX;
+    this.startingPosY = startingPosY;
+    this.startingDirectionId = startingDirectionId;
   }
 
   levelDisable() {

@@ -147,18 +147,14 @@ class GameSession {
           this.abort();
         } else {
           const time = reply.ntpTime + 10000;
-          const players = this.players.filter(player => {
+          const readyPlayers = this.players.filter(player => {
             return player.sessionReady;
-          }).map(player => {
-            return {
-              sessionIp: player.sessionIp,
-              sessionPort: player.sessionPort
-            };
-          });
-
+          })
           const payload = {
             startTime: time,
-            players: players
+            players: readyPlayers,
+            sessionToken: this.token,
+            level: this.level
           };
           this.session.send(this.buildMessage(SESSION_MSG_TYPE_START, payload));
         }

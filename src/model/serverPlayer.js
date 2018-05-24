@@ -16,6 +16,7 @@ class Player {
     this.queueArrivalTime = 0.0;
     this.sessionValidated = false;
     this.sessionReady = false;
+    this.sessionState = {};
   }
 
   //Creates a token for the player an stores secret for further validation
@@ -39,6 +40,14 @@ class Player {
   //Validates player token
   validate(token) {
     return validateToken(token, this.secret);
+  }
+
+  updateSessionState(posX, posY, directionId){
+    this.sessionState = {
+      posX: posX,
+      posY: posY,
+      directionId: directionId
+    }
   }
 
 }

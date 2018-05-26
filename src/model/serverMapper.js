@@ -17,8 +17,7 @@ const {
   SERVER_TABLE_LEVELS,
   SERVER_TABLE_PLAYER,
   SERVER_TABLE_AVATAR,
-  SERVER_DB_QUOTED_TYPE,
-  SERVER_DB_NON_QUOTED_TYPE
+  SERVER_DB_QUOTED_TYPE
 } = require('../constants');
 
 //Maps retrieved data into levels and queues
@@ -82,26 +81,25 @@ async function savePlayer(email, pword, callback){
     });
   }).then(response => {
 
-      if(response.data.length) {
-        return { exists: true };
-      }
+    if(response.data.length) {
+      return { exists: true };
+    }
 
-      return new Promise((resolve, reject) => {
-        mysqlQuery(insertData, (response) => {
-          if(response.error) {
-            reject();
-          }
-          resolve(response)
-        });
-      }).then(response => {
-        return { success: response.data };
-      }).catch(() => {
-        return { error: true };
-      })
-    })
-    .catch(() => {
+    return new Promise((resolve, reject) => {
+      mysqlQuery(insertData, (response) => {
+        if(response.error) {
+          reject();
+        }
+        resolve(response)
+      });
+    }).then(response => {
+      return { success: response.data };
+    }).catch(() => {
       return { error: true };
-    });
+    })
+  }).catch(() => {
+    return { error: true };
+  });
 
   callback(reply);
 }

@@ -11,11 +11,6 @@ const {
 //Handles player register request
 async function handleRegisterPlayerRequest(request, h) {
   logger(`registerRequest received from: ${request.info.remoteAddress}:${request.info.remotePort}`);
-  const errorObject = {
-    error: true,
-    exists: false,
-    success: false
-  }
 
   let response;
   if(!request.payload || !request.payload.email || !request.payload.pword){
@@ -23,13 +18,13 @@ async function handleRegisterPlayerRequest(request, h) {
   }  else {
     const email = request.payload.email;
     const pword = request.payload.pword;
-    response = await new Promise((resolve, reject) => {
+    response = await new Promise((resolve) => {
       request.server.methods.saveNewPlayer(email, pword, (reply) => {
         resolve(buildReply(reply));
       });
     }).then((response) => {
       return response;
-    }).catch((err) => {
+    }).catch(() => {
       return buildFailureReply();
     });
   }
@@ -49,7 +44,7 @@ async function handleLoginRequest(request, h) {
     const email = request.payload.email;
     const pword = request.payload.pword;
 
-    response = await new Promise((resolve, reject) => {
+    response = await new Promise((resolve) => {
       request.server.methods.logPlayer(email, pword, (reply) => {
         resolve(reply);
       });
@@ -58,12 +53,12 @@ async function handleLoginRequest(request, h) {
         request.cookieAuth.set(reply.payload);
       }
       return buildReply(reply);
-    }).catch((err) => {
+    }).catch(() => {
       return buildFailureReply();
     });
   }
 
-  reponse = h.response(response);
+  response = h.response(response);
   return response
 }
 
@@ -76,7 +71,7 @@ async function handleLogoutRequest(request, h) {
   } else {
     const session = request.auth.credentials;
     request.cookieAuth.clear();
-    response = await new Promise((resolve, reject) => {
+    response = await new Promise((resolve) => {
       request.server.methods.dlgPlayer(session.playerId, reply => {
         resolve(reply);
       });

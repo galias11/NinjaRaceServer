@@ -5,11 +5,11 @@ const {
   findPlayerById,
   findPlayerByEmail,
   findQueueById,
+  findSessionById,
   logger
 } = require('../utilities');
 
 // @Model classes
-const Level = require('./serverLevel');
 const Queue = require('./serverQueue');
 const GameSession = require('./serverGameSession');
 const {
@@ -31,11 +31,11 @@ const {
   SERVER_SERVICE_DLG,
   SERVER_SERVICE_JQR,
   SERVER_SERVICE_LQR,
+  SERVER_SERVICE_GSP,
   SESSION_MIN_GAME_PLAYERS,
   SESSION_MIN_START_PLAYERS,
   OBSERVER_MSG_ACTION_ABORT,
   OBSERVER_MSG_ACTION_ADD_PLAYER,
-  OBSERVER_MSG_ACTION_END,
   OBSERVER_MSG_ACTION_PLAYER_CONNECTION_LOST,
   OBSERVER_MSG_ACTION_START,
   OBSERVER_MSG_ACTION_VALIDATE
@@ -63,6 +63,7 @@ class Controller {
     this.queueObserver = this.queueObserver.bind(this);
     this.registerPlayer = this.registerPlayer.bind(this);
     this.removePlayer = this.removePlayer.bind(this);
+    this.removePlayerFromSession = this.removePlayerFromSession.bind(this);
     this.validateSession = this.validateSession.bind(this);
     this.validateStart = this.validateStart.bind(this);
     this.validateLevelData = this.validateLevelData.bind(this);
@@ -80,25 +81,25 @@ class Controller {
 
   //Initializes controller with data retrieved from ninjaRaceDB
   async initializeController(callback) {
-    let err = await new Promise((resolve, reject) => {
+    let err = await new Promise((resolve) => {
       loadLevelsData(this.initializeLevelsAndQueues)
       resolve();
     })
       .then(() => {
         return false;
       })
-      .catch(err => {
+      .catch(() => {
         return true;
       });
 
-    err &= await new Promise((resolve, reject) => {
+    err &= await new Promise((resolve) => {
       loadAvatarsData(this.initializeAvatars);
       resolve();
     })
       .then(() => {
         return false;
       })
-      .catch(err => {
+      .catch(() => {
         return true;
       })
 
@@ -164,7 +165,7 @@ class Controller {
   }
 
   //After retrieving player data from DB concludes login operation.
-  insertPlayer(data, callback) {
+  insertPlayer(data) {
     let result;
     if(data.notFound) {
       result = this.buildReplyData(SERVER_SERVICE_LOG, 2);
@@ -220,6 +221,7 @@ class Controller {
   //Logouts a player from the server
   dlgPlayer(playerId, callback) {
     let replyCode;
+    const player = findPlayerById(playerId, this.players);
     if(player) {
       this.queues.forEach(queue => {
         queue.removePlayer(playerId)
@@ -244,7 +246,6 @@ class Controller {
 
     const playerData = this.validatePlayerData(playerId, avatarId);
     const queueData = this.validateLevelData(levelId);
-    let reply;
     if(playerData.valid && queueData.valid){
       playerData.player.setSessionData(playerData.avatar, nick);
       queueData.queue.addPlayer(playerData.player, sessionData => {
@@ -408,6 +409,19 @@ class Controller {
       return player.internalId != playerId;
     })
   }
+
+  //Removes a player from a game session
+  removePlayerFromSession(playerId, sessionId, callback) {
+    const gameSession = findSessionById(sessionId, this.gameSessions);
+
+    if(gameSession && gameSession.playerInSession(playerId)) {
+      gameSession.removePlayer(playerId);
+      callback(this.buildReplyData(SERVER_SERVICE_GSP, 1));
+    } else {
+      callback(this.buildReplyData(SERVER_SERVICE_CRO, 2));
+    }
+  }
+
 }
 
 module.exports = Controller;

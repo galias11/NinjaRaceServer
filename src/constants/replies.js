@@ -5,7 +5,8 @@ const originServiceConstants = {
   SERVER_SERVICE_LDAT: 'levelDataRequest',
   SERVER_SERVICE_DLG: 'logout',
   SERVER_SERVICE_JQR: 'joinQueueRequest',
-  SERVER_SERVICE_LQR: 'leaveQueueRequest'
+  SERVER_SERVICE_LQR: 'leaveQueueRequest',
+  SERVER_SERVICE_GSP: 'gameProgress'
 }
 
 const repliesConstants = {
@@ -14,6 +15,7 @@ const repliesConstants = {
   SERVER_REPLY_CRO03: 'CRO03',
   SERVER_REPLY_CRO04: 'CRO04',
   SERVER_REPLY_DLG01: 'DLG01',
+  SERVER_REPLY_GSP01: 'GSP01',
   SERVER_REPLY_JQR01: 'JQR01',
   SERVER_REPLY_JQR02: 'JQR02',
   SERVER_REPLY_JQR03: 'JQR03',

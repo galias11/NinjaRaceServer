@@ -2,28 +2,19 @@
 const {
   createPublisher,
   findPlayerById,
-  generateToken,
   getNTPTime,
-  sendAbortData,
-  sendSessionData,
-  sendStartData,
   validateToken,
   webSocketSend
 } = require('../utilities');
 
 // @Constants
 const {
-  PLAYER_STATE_DISCONNECTED,
-  PLAYER_STATE_FINISHED,
   PLAYER_STATE_PLAYING,
-  SERVER_MIN_GAME_PLAYERS,
   SESSION_MSG_TYPE_ABORT,
   SESSION_MSG_TYPE_CREATE,
   SESSION_MSG_TYPE_CREATED,
-  SESSION_MSG_TYPE_END,
   SESSION_MSG_TYPE_ERR,
   SESSION_MSG_TYPE_INFO,
-  SESSION_MSG_TYPE_INIT_SENT,
   SESSION_MSG_TYPE_INIT_SUCCESS,
   SESSION_MSG_TYPE_PLAYER_DISCONNECTED,
   SESSION_MSG_TYPE_PLAYER_READY,
@@ -81,6 +72,7 @@ class SessionProccess {
         case SESSION_MSG_TYPE_START:
           this.gameStarted = true;
           this.syncClients();
+          break;
         default:
           break;
       }
@@ -93,7 +85,7 @@ class SessionProccess {
       if(err) {
         process.send({
           type: SESSION_MSG_TYPE_ERR,
-          payload: `game session error while creating`
+          payload: 'game session error while creating'
         })
       } else {
         const port = pub.port;
@@ -113,7 +105,7 @@ class SessionProccess {
             if(!this.abortStarted) {
               let incomingData;
               try {
-                 incomingData = JSON.parse(message);
+                incomingData = JSON.parse(message);
               } catch(err) {
                 //ignores non JSON parseable msgs
               }
@@ -154,7 +146,7 @@ class SessionProccess {
       getNTPTime((reply) => {
         if(reply.error) {
           const abortMsg = `game session ${this.id} failed sync, aborting`;
-          process.send(this.buildMessage(SESSION_MSG_TYPE_ABORT, payload));
+          process.send(this.buildMessage(SESSION_MSG_TYPE_ABORT, abortMsg));
           this.abortSession();
         } else {
           const startTime = reply.ntpTime + SESSION_SYNC_START_OFFSET;
@@ -219,7 +211,7 @@ class SessionProccess {
   validatePlayer(validateData, connectionSocket) {
     const sessionToken = validateData.sessionToken;
     const playerId = validateData.playerId;
-    const playerToken = validateData.playerToken;
+    //const playerToken = validateData.playerToken;
 
     if(!this.playersValidated && validateToken(sessionToken, this.sessionToken.secret)) {
       const player = findPlayerById(playerId, this.players);
@@ -313,7 +305,7 @@ class SessionProccess {
         }
       });
       const sessionData = this.buildMessage(SESSION_SC_COMM_CREATED, {
-        sessionToken: this.sessionToken,
+        sessionToken: this.sessionToken.token,
         playerToken: player.token,
         playersData: playersData
       });
@@ -323,4 +315,4 @@ class SessionProccess {
   }
 }
 
-const sessionProccess = new SessionProccess();
+new SessionProccess();

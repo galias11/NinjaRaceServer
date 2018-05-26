@@ -58,7 +58,7 @@ const insertStatement = (table, cols, values) => {
 }
 
 const mysqlQuery = (query, callback) => {
-  mysqlConnection.query(query, (err, results, fields) => {
+  mysqlConnection.query(query, (err, results) => {
     const response = {
       error: false,
       data: {}

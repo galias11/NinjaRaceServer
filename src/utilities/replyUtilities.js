@@ -7,21 +7,16 @@ const {
   SERVER_SERVICE_DLG,
   SERVER_SERVICE_JQR,
   SERVER_SERVICE_LQR,
+  SERVER_SERVICE_GSP,
   SERVER_REPLY_CRO01,
   SERVER_REPLY_CRO02,
   SERVER_REPLY_CRO03,
   SERVER_REPLY_CRO04,
   SERVER_REPLY_LOG01,
   SERVER_REPLY_LOG02,
-  SERVER_REPLY_LOG03,
-  SERVER_REPLY_LQR01,
   SERVER_REPLY_REG01,
-  SERVER_REPLY_REG02,
-  SERVER_REPLY_JQR01,
   SERVER_REPLY_JQR02,
   SERVER_REPLY_JQR03,
-  SERVER_REPLY_LDAT01,
-  SERVER_REPLY_DLG01,
   SERVER_REPLY_UNK_CODE,
   SERVER_REPLY_ERR01,
   SERVER_REPLY_ERR02,
@@ -111,7 +106,7 @@ const LOG03 = () => ({
   }
 });
 
-const REG01 = (token) => ({
+const REG01 = () => ({
   error: {
     code: SERVER_REPLY_REG01,
     text: SERVER_REPLY_ERR05
@@ -143,6 +138,12 @@ const LQR01 = () => ({
   }
 });
 
+const GSP01 = () => ({
+  payload: {
+    success: true
+  }
+});
+
 //Builds a reply
 const buildReply = (reply) => {
   switch (reply.service) {
@@ -158,7 +159,7 @@ const buildReply = (reply) => {
           return CRO04();
         default:
           return UNKNOWN();
-      };
+      }
     case SERVER_SERVICE_JQR:
       switch (reply.code) {
         case 1:
@@ -180,14 +181,14 @@ const buildReply = (reply) => {
           return LOG03();
         default:
           return UNKNOWN();
-      };
+      }
     case SERVER_SERVICE_LQR:
       switch (reply.code) {
         case 1:
           return LQR01();
         default:
           return UNKNOWN();
-      };
+      }
     case SERVER_SERVICE_REG:
       switch (reply.code) {
         case 1:
@@ -196,36 +197,43 @@ const buildReply = (reply) => {
           return REG02();
         default:
           return UNKNOWN();
-      };
+      }
     case SERVER_SERVICE_LDAT:
       switch (reply.code) {
         case 1:
           return LDAT01(reply.payload);
         default:
           return UNKNOWN();
-      };
+      }
     case SERVER_SERVICE_DLG:
       switch (reply.code) {
         case 1:
           return DLG01();
         default:
           return UNKNOWN();
-      };
+      }
+    case SERVER_SERVICE_GSP:
+      switch (reply.code) {
+        case 1:
+          return GSP01();
+        default:
+          return UNKNOWN();
+      }
     default:
       return UNKNOWN();
   }
 
 }
 
-buildBadRequestReply = () => {
+const buildBadRequestReply = () => {
   return CRO01();
 }
 
-buildAuthenticationReply = () => {
+const buildAuthenticationReply = () => {
   return CRO04();
 }
 
-buildFailureReply = () => {
+const buildFailureReply = () => {
   return CRO03();
 }
 

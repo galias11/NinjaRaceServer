@@ -2,13 +2,10 @@
 const {
   buildAuthenticationReply,
   buildBadRequestReply,
+  buildFailureReply,
   buildReply,
   logger
 } = require('../utilities');
-
-const {
-  SERVER_SERVICE_CRO
-} = require('../constants');
 
 //Handles a level data request.
 async function handleLevelDataRequest(request, h) {
@@ -18,7 +15,6 @@ async function handleLevelDataRequest(request, h) {
   if(!request.auth.isAuthenticated){
     response = h.response(buildAuthenticationReply());
   } else {
-    const session = request.auth.credentials;
     response = h.response(buildReply(request.server.methods.getLevelData(request.query.levelId)));
     response.type('aplication/JSON');
   }
@@ -45,7 +41,7 @@ async function handleQueueJoinRequest(request, h) {
       const avatarId = request.payload.avatarId;
       const nick = request.payload.nick;
 
-      response = await new Promise((resolve, reject) => {
+      response = await new Promise((resolve) => {
         request.server.methods.joinQueue(levelId, playerId, avatarId, nick, sessionIp, sessionPort, reply => {
           resolve(reply);
         })
@@ -74,7 +70,7 @@ async function handleQueueLeaveRequest(request, h){
       const queueId = request.payload.queueId;
       const playerId = session.playerId;
 
-      response = await new Promise((resolve, reject) => {
+      response = await new Promise((resolve) => {
         request.server.methods.leaveQueue(playerId, queueId, reply => {
           resolve(reply);
         })
@@ -89,8 +85,38 @@ async function handleQueueLeaveRequest(request, h){
   return response;
 }
 
+async function handleSessionLeaveRequest(request, h) {
+  logger(`leaveSessionRequest received from: ${request.info.remoteAddress}:${request.info.remotePort}`);
+
+  let response;
+  if(!request.auth.isAuthenticated){
+    response = h.response(buildAuthenticationReply());
+  } else {
+    if(!request.payload || !request.payload.sessionId) {
+      response = h.reponse(buildBadRequestReply());
+    } else {
+      const session = request.auth.credentials;
+      const playerId = session.playerId;
+      const sessionId = request.payload.sessionId;
+
+      response = await new Promise((resolve) => {
+        request.server.methods.removePlayerFromSession(playerId, sessionId, replyData => {
+          resolve(replyData);
+        })
+      }).then(replyData => {
+        return h.response(buildReply(replyData));
+      }).catch(() => {
+        return h.response(buildFailureReply());
+      });
+    }
+
+    return response;
+  }
+}
+
 module.exports = {
   handleLevelDataRequest,
   handleQueueJoinRequest,
-  handleQueueLeaveRequest
+  handleQueueLeaveRequest,
+  handleSessionLeaveRequest
 }

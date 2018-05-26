@@ -12,6 +12,7 @@ const validateMail = email => {
 
 const validatePword = pword => {
   let valid = pword.length >= 8;
+  return valid;
 }
 
 module.exports = {

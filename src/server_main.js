@@ -17,23 +17,13 @@ const {
   SERVER_MAIN_METHOD_POST
 } = require('./constants');
 
-// @Routes
-const {
-  LEVEL_DATA_REQUEST,
-  PLAYER_LOGIN_REQUEST,
-  PLAYER_REGISTER_REQUEST
-} = require('./routes');
+// @Utilities
+const { logger } = require('./utilities');
 
 // @ServerLogic
 const {
   Controller
 } = require('./model');
-
-// @Utilities
-const {
-  generateToken,
-  validateToken
-} = require('./utilities');
 
 //Creates the model controller object
 const controller = new Controller();
@@ -60,6 +50,7 @@ async function serverInitialize() {
   server.method('getSessionData', controller.getSessionData, {});
   server.method('joinQueue', controller.joinQueue, {});
   server.method('leaveQueue', controller.leaveQueue, {});
+  server.method('removePlayerFromSession', controller.removePlayerFromSession, {});
 
   //Server authentication settings
   const options = {
@@ -129,6 +120,14 @@ async function serverInitialize() {
       timeout: { socket: 600000, server: 540000 }
     },
     handler: handlers.handleQueueLeaveRequest
+  });
+
+  // Response to leaveSession request
+  server.route({
+    method: SERVER_MAIN_METHOD_POST,
+    path: routes.LEAVE_SESSION_REQUEST,
+    config: authPolicy,
+    handler: handlers.handleSessionLeaveRequest
   })
 
   //After server is set up, we make server start in order to listen the desired port
@@ -137,13 +136,13 @@ async function serverInitialize() {
     console.log(`NinjaRace server is now running at port ${server.info.port}`);
   } catch(err) {
     console.log(err);
-    proccess.exit(1);
+    process.exit(1);
   }
 }
 
 controller.initializeController((err) => {
   if(err) {
-    console.log("Server could not be initialized due to data retrieving from db error");
+    logger('Server could not be initialized due to data retrieving from db error');
     process.exit(1);
   }
   serverInitialize();

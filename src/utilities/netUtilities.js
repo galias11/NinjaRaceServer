@@ -1,27 +1,22 @@
 // @Vendor
-const net = require('net');
-const dgram = require('dgram');
 const getPort = require('get-port') //@get-port npm MIT licence
 const sntp = require('sntp') //@sntp npm BSD-3-Clause
 const WebSocket = require('ws'); //@ws npm MIT license
 
 // @Utilities
-const { logger } = require('./logginUtilities');
-const { generateToken, validateToken } = require('./encryptUtilities');
 
 // @constants
 const {
-  NTP_ARGENTINA_POOL,
+  //NTP_ARGENTINA_POOL,
   NTP_PORT,
   NTP_REQUEST_TIMEOUT,
   NTP_RESOLVE_REFERENCE,
-  SERVER_MAIN_IP,
   webSocketPerMessageDeflateParams
 } = require('../constants');
 
 //Creates a publisher for a game session.
 const createPublisher = callback => {
-  const port = getPort()
+  getPort()
     .then(port => {
       const wss = new WebSocket.Server({
         port: port,
@@ -32,7 +27,7 @@ const createPublisher = callback => {
         port: port
       });
 
-    }).catch((err) => {
+    }).catch(() => {
       callback(true);
     });
 };
@@ -41,7 +36,7 @@ const webSocketSend = (player, payload, errorListener) => {
   const sendData = JSON.stringify(payload);
   if(player.sessionSocket){
     try { player.sessionSocket.send(sendData); }
-    catch(err) { errorListener(player) };
+    catch(err) { errorListener(player) }
   }
 };
 

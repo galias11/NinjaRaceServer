@@ -5,9 +5,7 @@ const childProcess = require('child_process');
 const {
   findPlayerById,
   generateToken,
-  getNTPTime,
-  logger,
-  validateToken
+  logger
 } = require('../utilities');
 
 // @Constants
@@ -25,7 +23,6 @@ const {
   SESSION_MSG_TYPE_END,
   SESSION_MSG_TYPE_ERR,
   SESSION_MSG_TYPE_INFO,
-  SESSION_MSG_TYPE_INIT_SENT,
   SESSION_MSG_TYPE_INIT_SUCCESS,
   SESSION_MSG_TYPE_PLAYER_DISCONNECTED,
   SESSION_MSG_TYPE_PLAYER_READY,
@@ -60,7 +57,7 @@ class GameSession {
   }
 
   initializeSession() {
-    this.session = childProcess.fork(`./model/sessionProcess.js`);
+    this.session = childProcess.fork('./model/sessionProcess.js');
 
     const payload = {
       players: this.players,

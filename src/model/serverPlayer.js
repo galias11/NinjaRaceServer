@@ -11,12 +11,14 @@ class Player {
     this.sessionNick = '';
     this.sessionAvatar = undefined;
     this.inactiveTime = 0;
-    this.sessionPort = '';
-    this.sessionIp = '';
     this.queueArrivalTime = 0.0;
+    this.queueListener = undefined;
+    this.sessionSocket = undefined;
+    this.sessionConnection = undefined;
     this.sessionValidated = false;
     this.sessionReady = false;
     this.sessionState = {};
+    this.sessionConnected = false;
   }
 
   //Creates a token for the player an stores secret for further validation

@@ -123,7 +123,11 @@ async function serverInitialize() {
   server.route({
     method: SERVER_MAIN_METHOD_POST,
     path: routes.LEAVE_QUEUE_REQUEST,
-    config: authPolicy,
+    config: {
+      auth: authPolicy.auth,
+      plugins: authPolicy.plugins,
+      timeout: { socket: 600000, server: 540000 }
+    },
     handler: handlers.handleQueueLeaveRequest
   })
 

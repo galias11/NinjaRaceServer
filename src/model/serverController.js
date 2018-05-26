@@ -5,8 +5,7 @@ const {
   findPlayerById,
   findPlayerByEmail,
   findQueueById,
-  logger,
-  validateSessionPortUDP
+  logger
 } = require('../utilities');
 
 // @Model classes
@@ -32,11 +31,14 @@ const {
   SERVER_SERVICE_DLG,
   SERVER_SERVICE_JQR,
   SERVER_SERVICE_LQR,
-  SERVER_MIN_GAME_PLAYERS,
-  SERVER_MIN_SESSION_PLAYERS,
-  SESSION_ACTION_ABORT,
-  SESSION_ACTION_START,
-  SESSION_ACTION_VALIDATE
+  SESSION_MIN_GAME_PLAYERS,
+  SESSION_MIN_START_PLAYERS,
+  OBSERVER_MSG_ACTION_ABORT,
+  OBSERVER_MSG_ACTION_ADD_PLAYER,
+  OBSERVER_MSG_ACTION_END,
+  OBSERVER_MSG_ACTION_PLAYER_CONNECTION_LOST,
+  OBSERVER_MSG_ACTION_START,
+  OBSERVER_MSG_ACTION_VALIDATE
 } = require('../constants');
 
 class Controller {
@@ -60,6 +62,7 @@ class Controller {
     this.logPlayer = this.logPlayer.bind(this);
     this.queueObserver = this.queueObserver.bind(this);
     this.registerPlayer = this.registerPlayer.bind(this);
+    this.removePlayer = this.removePlayer.bind(this);
     this.validateSession = this.validateSession.bind(this);
     this.validateStart = this.validateStart.bind(this);
     this.validateLevelData = this.validateLevelData.bind(this);
@@ -217,16 +220,14 @@ class Controller {
   //Logouts a player from the server
   dlgPlayer(playerId, callback) {
     let replyCode;
-    const player = findPlayerById(playerId, this.players);
     if(player) {
-      const index = this.players.indexOf(player);
-      this.players.splice(index, 1);
       this.queues.forEach(queue => {
         queue.removePlayer(playerId)
       });
       this.gameSessions.forEach(gameSession => {
         gameSession.removePlayer(playerId);
-      })
+      });
+      this.removePlayer(playerId);
       replyCode = 1;
     } else {
       replyCode = 2;
@@ -241,45 +242,19 @@ class Controller {
       callback(this.buildReplyData(SERVER_SERVICE_CRO, 2));
     }
 
-    const reply = new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        logger(`timeout reached for reply from ${sessionIp}:${sessionPort}`);
-        reject();
-      }, 5000);
-
-      validateSessionPortUDP(sessionIp, sessionPort, incomingData => {
-        clearTimeout(timer);
-        const payload = incomingData.payload;
-        if(incomingData.error || !incomingData.payload) {
-          reject();
-        }
-        else if(!payload || !payload.playerId || !payload.email) {
-          reject();
-        }
-        else if(!player || !(player.internalId == payload.playerId && player.email == payload.email)) {
-          reject();
-        } else {
-          resolve();
-        }
+    const playerData = this.validatePlayerData(playerId, avatarId);
+    const queueData = this.validateLevelData(levelId);
+    let reply;
+    if(playerData.valid && queueData.valid){
+      playerData.player.setSessionData(playerData.avatar, nick);
+      queueData.queue.addPlayer(playerData.player, sessionData => {
+        callback(this.buildReplyData(SERVER_SERVICE_JQR, 1, sessionData));
       });
-    }).then(() => {
-      const playerData = this.validatePlayerData(playerId, avatarId);
-      const queueData = this.validateLevelData(levelId);
-      let reply;
-      if(playerData.valid && queueData.valid){
-        playerData.player.setSessionData(playerData.avatar, nick);
-        queueData.queue.addPlayer(playerData.player, sessionIp, sessionPort);
-        logger('client listener check successful')
-        reply = this.buildReplyData(SERVER_SERVICE_JQR, 1, {queueId: queueData.queue.levelId});
-      } else if(playerData.inQueue || playerData.inSession) {
-        reply = this.buildReplyData(SERVER_SERVICE_JQR, 3);
-      } else {
-        reply = this.buildReplyData(SERVER_SERVICE_CRO, 2);
-      }
-      callback(reply);
-    }).catch(() => {
-      callback(this.buildReplyData(SERVER_SERVICE_JQR, 2));
-    });
+    } else if(playerData.inQueue || playerData.inSession) {
+      callback(this.buildReplyData(SERVER_SERVICE_JQR, 3));
+    } else {
+      callback(this.buildReplyData(SERVER_SERVICE_CRO, 2));
+    }
   }
 
   //Validates data and removes a player from a queue
@@ -351,29 +326,40 @@ class Controller {
     }
   }
 
-  //Observes queues and when players are enough a new game session is started.
-  queueObserver(queue) {
-    if(queue.getWaitingPlayers() >= SERVER_MIN_SESSION_PLAYERS) {
-      logger('initializing new game session');
-      const players = queue.getNewSessionPlayers();
-      const level = findLevel(queue.levelId, this.levels)
-      const gameSession = new GameSession(level, players, this.gameSessionObserver);
-      gameSession.initializeSession();
-      this.gameSessions.push(gameSession);
+  //Observes queues events
+  queueObserver(queue, action) {
+    switch(action) {
+      case OBSERVER_MSG_ACTION_ADD_PLAYER:
+        if(queue.getWaitingPlayers() >= SESSION_MIN_START_PLAYERS) {
+          logger('initializing new game session');
+          const players = queue.getNewSessionPlayers();
+          const level = findLevel(queue.levelId, this.levels)
+          const gameSession = new GameSession(level, players, this.gameSessionObserver);
+          gameSession.initializeSession();
+          this.gameSessions.push(gameSession);
+        } else {
+          logger(`player added to queue N°${queue.levelId} waiting list`);
+        }
+        break;
+      default:
+        break;
     }
   }
 
   //Observes created game session events
   gameSessionObserver(gameSession, action) {
     switch(action) {
-      case SESSION_ACTION_VALIDATE:
-        this.validateSession(gameSession);
-        break;
-      case SESSION_ACTION_ABORT:
+      case OBSERVER_MSG_ACTION_ABORT:
         this.abortSession(gameSession);
         break;
-      case SESSION_ACTION_START:
+      case OBSERVER_MSG_ACTION_VALIDATE:
+        this.validateSession(gameSession);
+        break;
+      case OBSERVER_MSG_ACTION_START:
         this.validateStart(gameSession);
+        break;
+      case OBSERVER_MSG_ACTION_PLAYER_CONNECTION_LOST:
+        this.removePlayer(gameSession);
         break;
       default:
         break;
@@ -385,9 +371,9 @@ class Controller {
     const validatedPlayers = gameSession.validatedPlayers;
     const gameSessionId = gameSession.sessionId;
     logger(`processing game session ${gameSession.sessionId} validation`);
-    if(validatedPlayers >= SERVER_MIN_GAME_PLAYERS) {
+    if(validatedPlayers >= SESSION_MIN_GAME_PLAYERS) {
+      gameSession.setValidated();
       logger(`game session ${gameSessionId} initialized with ${validatedPlayers} players`);
-      gameSession.startGame();
     } else {
       logger(`game session ${gameSessionId} aborted due to not enough validated players`);
       gameSession.abortGame();
@@ -399,8 +385,8 @@ class Controller {
     const readyPlayers = gameSession.readyPlayers;
     const gameSessionId = gameSession.sessionId;
     logger(`processing game session ${gameSession.sessionId} sync`);
-    if(readyPlayers >= SERVER_MIN_GAME_PLAYERS) {
-      logger(`game session ${gameSessionId} synchronized for ${readyPlayers} players`);
+    if(readyPlayers >= SESSION_MIN_GAME_PLAYERS) {
+      logger(`game session ${gameSessionId} starting sync for ${readyPlayers} players`);
       gameSession.startGame();
     } else {
       logger(`game session ${gameSessionId} aborted due to not enough validated players`);
@@ -414,6 +400,13 @@ class Controller {
     if(index != -1){
       this.gameSessions.splice(index, index + 1);
     }
+  }
+
+  //Removes a player from the server connected players
+  removePlayer(playerId) {
+    this.players = this.players.filter(player => {
+      return player.internalId != playerId;
+    })
   }
 }
 

@@ -2,7 +2,10 @@
 const { getCurrentTimeStamp } = require('../utilities');
 
 // @Constants
-const { SERVER_MIN_SESSION_PLAYERS } = require('../constants');
+const {
+  OBSERVER_MSG_ACTION_ADD_PLAYER,
+  SESSION_MIN_START_PLAYERS
+} = require('../constants');
 
 class Queue {
   constructor(levelId, queueObserver) {
@@ -14,14 +17,13 @@ class Queue {
   }
 
   //Adds a new player into the queue
-  addPlayer(player, sessionIp, sessionPort) {
+  addPlayer(player, queueListener) {
     let success = false;
     if(player) {
-      player.sessionPort = sessionPort;
-      player.sessionIp = sessionIp;
+      player.queueListener = queueListener;
       player.queueArrivalTime = getCurrentTimeStamp();
       this.waitingPlayers.push(player);
-      this.queueObserver(this);
+      this.queueObserver(this, OBSERVER_MSG_ACTION_ADD_PLAYER);
       success = true;
     }
     return success;
@@ -68,9 +70,9 @@ class Queue {
   //Gets the four players which have waited longer on the queue and removes them from the queue
   getNewSessionPlayers() {
     let players;
-    if(this.waitingPlayers.length >= SERVER_MIN_SESSION_PLAYERS) {
-      players = this.waitingPlayers.slice(0, SERVER_MIN_SESSION_PLAYERS);
-      this.waitingPlayers.splice(0, SERVER_MIN_SESSION_PLAYERS);
+    if(this.waitingPlayers.length >= SESSION_MIN_START_PLAYERS) {
+      players = this.waitingPlayers.slice(0, SESSION_MIN_START_PLAYERS);
+      this.waitingPlayers.splice(0, SESSION_MIN_START_PLAYERS);
       this.queueObserver(this);
     }
     return players;

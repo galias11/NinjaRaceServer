@@ -3,29 +3,13 @@
 // @replies
 const repliesConstants = require('./replies');
 
+// @communication
+const commConstants = require('./commConstants');
+
+// @parameters
+const parameters = require('./parameters');
+
 const serverConstants = {
-  ARGENTINA_NTP_POOL: 'ar.pool.ntp.org',
-  SESSION_MSG_CLIENT_LOAD_FINISHED: 'CLIENT_LOAD_FINISHED',
-  SESSION_MSG_TYPE_CREATE: 'CREATE',
-  SESSION_MSG_TYPE_CREATED: 'CREATED',
-  SESSION_MSG_TYPE_ERR: 'ERROR',
-  SESSION_MSG_TYPE_INIT_SUCCESS: 'INIT_SUCCESS',
-  SESSION_MSG_TYPE_ABORT: 'ABORT',
-  SESSION_MSG_TYPE_END: 'END',
-  SESSION_MSG_TYPE_INFO: 'INFO',
-  SESSION_MSG_TYPE_START: 'START',
-  SESSION_MSG_TYPE_INIT_SENT: 'INIT_SENT',
-  SESSION_ACTION_VALIDATE: 'VALIDATE',
-  SESSION_ACTION_START: 'START',
-  SESSION_ACTION_END: 'END',
-  SESSION_ACTION_ABORT: 'ABORT',
-  SESSION_TYPE_UDP_CHECK_PORT: 'PORT_CHECK',
-  SESSION_TYPE_UDP_CREATED: 'SESSION_CREATED',
-  SESSION_TYPE_UDP_ACK: 'SESSION_CREATED',
-  SESSION_TYPE_UDP_START: 'SESSION_START',
-  SESSION_TYPE_UDP_LOAD_FINISH: 'CLIENT_LOAD_FINISH',
-  SESSION_TYPE_UDP_END: 'SESSION_END',
-  SESSION_TYPE_UDP_UPDATE: 'SESSION_UPDATE',
   SERVER_COOKIE_TTL: 15*24*60*60*1000, //15 days
   SERVER_CRYPT_SALT: 10,
   SERVER_DATE_STD_ADJUST: 3*60*60*1000, //timestamp adjusting --> 3 hours
@@ -38,9 +22,12 @@ const serverConstants = {
   SERVER_DB_NON_QUOTED_TYPE: 'NQT',
   SERVER_TABLE_LEVELS: 'levels',
   SERVER_TABLE_PLAYER: 'players',
-  SERVER_TABLE_AVATAR: 'avatars',
-  SERVER_MIN_SESSION_PLAYERS: 4,
-  SERVER_MIN_GAME_PLAYERS: 2
+  SERVER_TABLE_AVATAR: 'avatars'
 }
 
-module.exports = {...serverConstants, ...repliesConstants };
+module.exports = {
+  ...commConstants, 
+  ...parameters,
+  ...repliesConstants,
+  ...serverConstants
+};

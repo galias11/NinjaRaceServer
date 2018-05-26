@@ -12,18 +12,24 @@ const {
 
 // @Constants
 const {
-  SESSION_ACTION_VALIDATE,
-  SESSION_ACTION_START,
-  SESSION_ACTION_ABORT,
+  SESSION_AFTER_FIRST_LOAD_VALIDATION_TIME,
+  SESSION_CONNECTION_VALIDATION_TIME,
+  SESSION_MIN_PLAYERS_ABORT,
+  OBSERVER_MSG_ACTION_ABORT,
+  OBSERVER_MSG_ACTION_START,
+  OBSERVER_MSG_ACTION_PLAYER_CONNECTION_LOST,
+  OBSERVER_MSG_ACTION_VALIDATE,
   SESSION_MSG_TYPE_ABORT,
-  SESSION_MSG_CLIENT_LOAD_FINISHED,
   SESSION_MSG_TYPE_CREATE,
+  SESSION_MSG_TYPE_CREATED,
   SESSION_MSG_TYPE_END,
   SESSION_MSG_TYPE_ERR,
-  SESSION_MSG_TYPE_INIT_SUCCESS,
   SESSION_MSG_TYPE_INFO,
   SESSION_MSG_TYPE_INIT_SENT,
-  SESSION_MSG_TYPE_CREATED,
+  SESSION_MSG_TYPE_INIT_SUCCESS,
+  SESSION_MSG_TYPE_PLAYER_DISCONNECTED,
+  SESSION_MSG_TYPE_PLAYER_READY,
+  SESSION_MSG_TYPE_PLAYER_VALIDATED,
   SESSION_MSG_TYPE_START
 } = require('../constants');
 
@@ -33,28 +39,24 @@ class GameSession {
     this.level = level;
     this.players = players;
     this.token = generateToken();
-    this.initialized = false;
-    this.inProgress = false;
     this.ended = false;
     this.session = '';
     this.sessionId = '';
     this.validatedPlayers = 0;
     this.readyPlayers = 0;
-    this.validated = false;
-    this.syncStarted = false;
-    this.started = false;
 
     this.abortGame = this.abortGame.bind(this);
     this.buildMessage = this.buildMessage.bind(this);
     this.handleIncomingMsg = this.handleIncomingMsg.bind(this);
     this.initializeSession = this.initializeSession.bind(this);
-    this.initReadyCounter = this.initReadyCounter.bind(this);
     this.initValidationCounter = this.initValidationCounter.bind(this);
-    this.removePlayer = this.removePlayer.bind(this);
+    this.initReadyCounter = this.initReadyCounter.bind(this);
     this.playerInSession = this.playerInSession.bind(this);
-    this.playerReady = this.playerReady.bind(this);
+    this.removePlayer = this.removePlayer.bind(this);
+    this.sendSessionData = this.sendSessionData.bind(this);
+    this.setValidated = this.setValidated.bind(this);
+    this.setStarted = this.setStarted.bind(this);
     this.startGame = this.startGame.bind(this);
-    this.validatePlayer = this.validatePlayer.bind(this);
   }
 
   initializeSession() {
@@ -62,71 +64,49 @@ class GameSession {
 
     const payload = {
       players: this.players,
-      levelId: this.level.id,
-      token: this.token.token
+      level: this.level,
+      token: this.token
     };
 
     this.session.send(this.buildMessage(SESSION_MSG_TYPE_CREATE, payload));
 
-    this.session.on('message', (msg) => {
+    this.session.on('message', msg => {
       this.handleIncomingMsg(msg);
     })
-  }
-
-  //Decides if a player init reply is valid and (if valid) set the player validated
-  validatePlayer(playerId, playerToken, sessionToken) {
-    if(!this.validated && validateToken(sessionToken, this.token.secret)) {
-      const player = findPlayerById(playerId, this.players);
-      if(player && player.validate(playerToken)) {
-        player.sessionValidated = true;
-        this.validatedPlayers += 1;
-        logger(`player ${playerId} validated on game session ${this.sessionId}`);
-      }
-    }
-  }
-
-  //Sets a player ready to start the game
-  playerReady(playerId, playerToken, sessionToken) {
-    if(this.validated && validateToken(sessionToken, this.token.secret)) {
-      const player = findPlayerById(playerId, this.players);
-      if(player && player.validate(playerToken) && !player.sessionReady) {
-        player.sessionReady = true;
-        logger(`player ${playerId} ready to start game session ${this.sessionId}`);
-        if(!this.syncStarted){
-          this.initReadyCounter();
-        }
-      }
-    }
   }
 
   //Inits validation counter for player game session validation
   initValidationCounter() {
     setTimeout(() => {
-      const validatedPlayers = this.players.filter(player => {
-        return player.sessionValidated;
-      });
-      this.validatedPlayers = validatedPlayers.length
-      this.sessionObserver(this, SESSION_ACTION_VALIDATE);
-    }, 5000);
+      this.sessionObserver(this, OBSERVER_MSG_ACTION_VALIDATE);
+    }, SESSION_CONNECTION_VALIDATION_TIME);
   }
 
   //Inits countdown until game start
   initReadyCounter() {
-    this.syncStarted = true;
     setTimeout(() => {
-      const readyPlayers = this.players.filter(player => {
-        return player.sessionReady;
-      });
-      this.readyPlayers = readyPlayers.length;
-      this.sessionObserver(this, SESSION_ACTION_START);
-    }, 10000);
+      this.sessionObserver(this, OBSERVER_MSG_ACTION_START);
+    }, SESSION_AFTER_FIRST_LOAD_VALIDATION_TIME);
   }
 
   //Removes a player from the game session
   removePlayer(playerId) {
-    this.players == this.players.filter(player => {
-      return player.internalId != playerId
-    })
+    const player = findPlayerById(playerId, this.players);
+    if(player) {
+      if(player.sessionValidated) {
+        this.validatedPlayers -= 1;
+      }
+      if(player.sessionReady) {
+        this.readyPlayers -= 1;
+      }
+      this.players = this.players.filter(player => {
+        return player.internalId != playerId
+      });
+      this.sessionObserver(playerId, OBSERVER_MSG_ACTION_PLAYER_CONNECTION_LOST);
+      if(this.players.length <= SESSION_MIN_PLAYERS_ABORT) {
+        this.sessionObserver(this, OBSERVER_MSG_ACTION_ABORT);
+      }
+    }
   }
 
   //Returns if a player is in a game session
@@ -138,42 +118,26 @@ class GameSession {
 
   //Starts game
   startGame() {
-    if(!this.validated) {
-      this.validated = true;
-    } else {
-      getNTPTime((reply) => {
-        if(reply.error) {
-          logger(`game session ${this.sessionId} failed sync, aborting`)
-          this.abort();
-        } else {
-          const time = reply.ntpTime + 10000;
-          const readyPlayers = this.players.filter(player => {
-            return player.sessionReady;
-          })
-          const payload = {
-            startTime: time,
-            players: readyPlayers,
-            sessionToken: this.token,
-            level: this.level
-          };
-          this.session.send(this.buildMessage(SESSION_MSG_TYPE_START, payload));
-        }
-      })
-    }
+    this.session.send(this.buildMessage(SESSION_MSG_TYPE_START));
   }
 
   //Aborts game start
   abortGame() {
-    const validatedPlayers = this.players.filter(player => {
-      return player.sessionValidated;
-    }).map(player => {
-      return {
-        sessionIp: player.sessionIp,
-        sessionPort: player.sessionPort
-      };
-    })
-    this.session.send(this.buildMessage(SESSION_MSG_TYPE_ABORT, validatedPlayers));
-    this.sessionObserver(this, SESSION_ACTION_ABORT);
+    this.session.send(this.buildMessage(SESSION_MSG_TYPE_ABORT));
+    this.sessionObserver(this, OBSERVER_MSG_ACTION_ABORT);
+  }
+
+  //Sends game session Data to client
+  sendSessionData(port) {
+    const sessionData = {
+      sessionId: this.sessionId,
+      sessionToken: this.token.token,
+      sessionPort: port
+    };
+    this.players.forEach(player => {
+      player.queueListener(sessionData);
+    });
+    this.initValidationCounter();
   }
 
   //Acts as a reducer between de gameSession controller and the session child process
@@ -185,20 +149,27 @@ class GameSession {
           break;
         case SESSION_MSG_TYPE_CREATED:
           this.sessionId = msg.payload;
+          this.sendSessionData(msg.payload);
           logger(`game session ${this.sessionId} has been created`);
           break;
-        case SESSION_MSG_TYPE_INIT_SUCCESS:
-          this.validatePlayer(msg.payload.playerId, msg.payload.playerToken, msg.payload.sessionToken);
+        case SESSION_MSG_TYPE_PLAYER_VALIDATED:
+          this.validatedPlayers += 1;
+          logger(`player ${msg.payload.playerId} validated on game session ${this.sessionId}`);
           break;
-        case SESSION_MSG_TYPE_INIT_SENT:
-          this.initValidationCounter();
+        case SESSION_MSG_TYPE_PLAYER_READY:
+          this.readyPlayers += 1;
+          if(msg.payload.initCounter) {
+            this.initReadyCounter();
+          }
+          logger(`player ${msg.payload.playerId} ready to start on game session ${this.sessionId}`);
           break;
-        case SESSION_MSG_CLIENT_LOAD_FINISHED:
-          this.playerReady(msg.payload.playerId, msg.payload.playerToken, msg.payload.sessionToken);
+        case SESSION_MSG_TYPE_PLAYER_DISCONNECTED:
+          this.removePlayer(msg.payload.playerId);
           break;
         case SESSION_MSG_TYPE_END:
           break;
         case SESSION_MSG_TYPE_ABORT:
+          logger(msg.payload);
           break;
         case SESSION_MSG_TYPE_ERR:
           logger(msg.payload);
@@ -207,6 +178,14 @@ class GameSession {
           break;
       }
     }
+  }
+
+  setValidated() {
+    this.session.send(this.buildMessage(SESSION_MSG_TYPE_INIT_SUCCESS));
+  }
+
+  setStarted() {
+    this.session.send(this.buildMessage(SESSION_MSG_TYPE_START));
   }
 
   buildMessage(type, payload) {

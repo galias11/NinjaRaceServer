@@ -25,7 +25,8 @@ const {
 const mapLevels = (retrievedData) => {
   if(retrievedData) {
     return retrievedData.data.map(level => {
-      return new Level(level.levelId, level.clientFileRef);
+      return new Level(level.levelId, level.clientFileRef, level.startingPosX,
+                       level.startingPosY, level.startingDirectionId);
     });
   }
 }

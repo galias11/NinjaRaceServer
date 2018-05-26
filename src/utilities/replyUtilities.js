@@ -70,10 +70,10 @@ const CRO04 = () => ({
   }
 });
 
-const JQR01 = (queueData) => ({
+const JQR01 = (sessionData) => ({
   payload: {
     success: true,
-    queueData
+    sessionData
   }
 });
 

@@ -44,11 +44,13 @@ class Player {
     return validateToken(token, this.secret);
   }
 
-  updateSessionState(posX, posY, directionId){
+  updateSessionState(posX, posY, directionId, state){
+    const newState = state ? state : this.sessionState.state;
     this.sessionState = {
       posX: posX,
       posY: posY,
-      directionId: directionId
+      directionId: directionId,
+      state: newState
     }
   }
 

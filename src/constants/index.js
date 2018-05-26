@@ -10,6 +10,9 @@ const commConstants = require('./commConstants');
 const parameters = require('./parameters');
 
 const serverConstants = {
+  PLAYER_STATE_DISCONNECTED: 'D',
+  PLAYER_STATE_FINISHED: 'F',
+  PLAYER_STATE_PLAYING: 'P',
   SERVER_COOKIE_TTL: 15*24*60*60*1000, //15 days
   SERVER_CRYPT_SALT: 10,
   SERVER_DATE_STD_ADJUST: 3*60*60*1000, //timestamp adjusting --> 3 hours
@@ -26,7 +29,7 @@ const serverConstants = {
 }
 
 module.exports = {
-  ...commConstants, 
+  ...commConstants,
   ...parameters,
   ...repliesConstants,
   ...serverConstants

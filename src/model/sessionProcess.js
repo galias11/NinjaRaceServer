@@ -13,6 +13,9 @@ const {
 
 // @Constants
 const {
+  PLAYER_STATE_DISCONNECTED,
+  PLAYER_STATE_FINISHED,
+  PLAYER_STATE_PLAYING,
   SERVER_MIN_GAME_PLAYERS,
   SESSION_MSG_TYPE_ABORT,
   SESSION_MSG_TYPE_CREATE,
@@ -28,6 +31,7 @@ const {
   SESSION_MSG_TYPE_START,
   SESSION_POST_ABORT_PROCESS_TTL,
   SESSION_SC_COMM_ACK,
+  SESSION_SC_COMM_CREATED,
   SESSION_SC_COMM_END,
   SESSION_SC_COMM_LOAD_FINISH,
   SESSION_SC_COMM_START_SYNC,
@@ -48,16 +52,19 @@ class SessionProccess {
     this.playersValidated = false;
     this.syncStarted = false;
     this.readyCounterStarted = false;
+    this.abortStarted = false;
 
     this.abortSession = this.abortSession.bind(this);
     this.buildMessage = this.buildMessage.bind(this);
+    this.confirmSession = this.confirmSession.bind(this);
+    this.handleDisconnect = this.handleDisconnect.bind(this);
     this.handlePublisherIncomingData = this.handlePublisherIncomingData.bind(this);
     this.initSession = this.initSession.bind(this);
     this.setPlayerReady = this.setPlayerReady.bind(this);
     this.startSession = this.startSession.bind(this);
     this.syncClients = this.syncClients.bind(this);
+    this.updatePlayer = this.updatePlayer.bind(this);
     this.validatePlayer = this.validatePlayer.bind(this);
-    this.handleDisconnect = this.handleDisconnect.bind(this);
 
     //Forked session process reducer
     process.on('message', data => {
@@ -69,7 +76,7 @@ class SessionProccess {
           this.initSession(data.payload);
           break;
         case SESSION_MSG_TYPE_INIT_SUCCESS:
-          this.playersValidated = true;
+          this.confirmSession();
           break;
         case SESSION_MSG_TYPE_START:
           this.gameStarted = true;
@@ -103,16 +110,21 @@ class SessionProccess {
 
         this.publisher.on('connection', ws => {
           ws.on('message', message => {
-            try {
-              const incomingData = JSON.parse(message);
-              const data = {
-                type: incomingData.type,
-                payload: incomingData.payload,
-                connection: ws
+            if(!this.abortStarted) {
+              let incomingData;
+              try {
+                 incomingData = JSON.parse(message);
+              } catch(err) {
+                //ignores non JSON parseable msgs
               }
-              this.handlePublisherIncomingData(data);
-            } catch(err) {
-              //ignores non JSON parseable msgs
+              if(incomingData) {
+                const data = {
+                  type: incomingData.type,
+                  payload: incomingData.payload,
+                  connection: ws
+                }
+                this.handlePublisherIncomingData(data);
+              }
             }
           });
         })
@@ -122,6 +134,7 @@ class SessionProccess {
 
   //Aborts a recently started session
   abortSession(){
+    this.abortStarted = true;
     this.players.forEach(player => {
       if(player.sessionValidated && player.sessionConnected) {
         const abortData = {
@@ -167,7 +180,8 @@ class SessionProccess {
     process.send(this.buildMessage(SESSION_MSG_TYPE_INFO, infoMsg));
 
     this.players.forEach(player => {
-      player.updateSessionState(this.level.startingPosX, this.level.startingPosY, this.level.startingDirectionId);
+      player.updateSessionState(this.level.startingPosX, this.level.startingPosY,
+                                this.level.startingDirectionId, PLAYER_STATE_PLAYING);
     });
     setTimeout(() => {
       this.gameLoop();
@@ -185,7 +199,7 @@ class SessionProccess {
             y: player.sessionState.posY,
           },
           directionId: player.sessionState.directionId,
-          finished: player.sessionState.finished
+          state: player.sessionState.state
         };
       });
       this.players.forEach(player => {
@@ -226,8 +240,7 @@ class SessionProccess {
 
     if(this.playersValidated && !this.gameStarted && validateToken(sessionToken, this.sessionToken.secret)) {
       const player = findPlayerById(playerId, this.players);
-      //TODO: uncomment when it is not a mock test
-      if(player && player.sessionValidated && !player.sessionReady /*&& player.validate(playerToken)*/) {
+      if(player && player.sessionValidated && !player.sessionReady && player.validate(playerToken)) {
         const msgPayload = {
           playerId: player.internalId,
           initCounter: !this.syncStarted
@@ -252,6 +265,9 @@ class SessionProccess {
       case SESSION_SC_COMM_LOAD_FINISH:
         this.setPlayerReady(data.payload);
         break;
+      case SESSION_SC_COMM_UPDATE:
+        this.updatePlayer(data.payload);
+        break;
       default:
         break;
     }
@@ -270,6 +286,40 @@ class SessionProccess {
       type,
       payload: payload
     }
+  }
+
+  //Updates player state in the session
+  updatePlayer(playerData) {
+    if(playerData && validateToken(playerData.sessionToken, this.sessionToken.secret)) {
+      const player = findPlayerById(playerData.playerId, this.players);
+      if(player && validateToken(playerData.playerToken, player.secret)) {
+        player.updateSessionState(playerData.position.x, playerData.position.y,
+                                  playerData.directionId);
+      }
+    }
+  }
+
+  //Confirms session creation to validated clients
+  confirmSession() {
+    this.players = this.players.filter(player => {
+      return player.sessionValidated;
+    });
+    this.players.forEach(player => {
+      const playersData = this.players.map(player => {
+        return {
+          playerId: player.internalId,
+          avatarId: player.sessionAvatar.id,
+          nick: player.sessionNick
+        }
+      });
+      const sessionData = this.buildMessage(SESSION_SC_COMM_CREATED, {
+        sessionToken: this.sessionToken,
+        playerToken: player.token,
+        playersData: playersData
+      });
+      webSocketSend(player, sessionData, this.handleDisconnect);
+    });
+    this.playersValidated = true;
   }
 }
 

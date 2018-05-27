@@ -28,7 +28,8 @@ const serverConstants = {
   SERVER_DB_NON_QUOTED_TYPE: 'NQT',
   SERVER_TABLE_LEVELS: 'levels',
   SERVER_TABLE_PLAYER: 'players',
-  SERVER_TABLE_AVATAR: 'avatars'
+  SERVER_TABLE_AVATAR: 'avatars',
+  TOKEN_REGEX: /^[A-Za-z0-9-]+$/
 }
 
 module.exports = {

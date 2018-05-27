@@ -3,6 +3,8 @@ const {
   createPublisher,
   findPlayerById,
   getNTPTime,
+  schemas,
+  validateData,
   validateToken,
   webSocketSend,
   webSocketTerminate
@@ -120,7 +122,7 @@ class SessionProccess {
               } catch(err) {
                 //ignores non JSON parseable msgs
               }
-              if(incomingData) {
+              if(validateData(incomingData, schemas.sessionIncomingData)) {
                 const data = {
                   type: incomingData.type,
                   payload: incomingData.payload,

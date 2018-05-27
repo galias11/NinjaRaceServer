@@ -4,7 +4,9 @@ const {
   buildBadRequestReply,
   buildFailureReply,
   buildReply,
-  logger
+  logger,
+  schemas,
+  validateData
 } = require('../utilities');
 
 
@@ -13,7 +15,7 @@ async function handleRegisterPlayerRequest(request, h) {
   logger(`registerRequest received from: ${request.info.remoteAddress}:${request.info.remotePort}`);
 
   let response;
-  if(!request.payload || !request.payload.email || !request.payload.pword){
+  if(!validateData(request.payload, schemas.registerPlayerSchema)){
     response = buildBadRequestReply();
   }  else {
     const email = request.payload.email;
@@ -38,7 +40,7 @@ async function handleLoginRequest(request, h) {
   logger(`loginRequest received from: ${request.info.remoteAddress}:${request.info.remotePort}`);
 
   let response;
-  if(!request.payload || !request.payload.email || !request.payload.pword){
+  if(!validateData(request.payload, schemas.loginRequestSchema)){
     response = buildBadRequestReply();
   } else {
     const email = request.payload.email;

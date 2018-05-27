@@ -4,7 +4,9 @@ const {
   buildBadRequestReply,
   buildFailureReply,
   buildReply,
-  logger
+  logger,
+  schemas,
+  validateData
 } = require('../utilities');
 
 //Handles a level data request.
@@ -15,7 +17,11 @@ async function handleLevelDataRequest(request, h) {
   if(!request.auth.isAuthenticated){
     response = h.response(buildAuthenticationReply());
   } else {
-    response = h.response(buildReply(request.server.methods.getLevelData(request.query.levelId)));
+    if(!validateData(request.query, schemas.levelRequestSchema)){
+      response = h.response(buildReply(request.server.methods.getLevelData(request.query.levelId)));
+    } else {
+      response = h.response(buildBadRequestReply());
+    }
     response.type('aplication/JSON');
   }
 
@@ -30,11 +36,9 @@ async function handleQueueJoinRequest(request, h) {
   if(!request.auth.isAuthenticated){
     response = h.response(buildAuthenticationReply());
   } else {
-    if(!request.payload || !request.payload.levelId || !request.payload.avatarId || !request.payload.nick || !request.payload.sessionPort) {
+    if(!validateData(request.payload, schemas.joinQueueRequestSchema)) {
       response = h.response(buildBadRequestReply());
     } else {
-      const sessionPort = request.payload.sessionPort;
-      const sessionIp = request.info.remoteAddress;
       const session = request.auth.credentials;
       const playerId = session.playerId;
       const levelId = request.payload.levelId;
@@ -42,7 +46,7 @@ async function handleQueueJoinRequest(request, h) {
       const nick = request.payload.nick;
 
       response = await new Promise((resolve) => {
-        request.server.methods.joinQueue(levelId, playerId, avatarId, nick, sessionIp, sessionPort, reply => {
+        request.server.methods.joinQueue(levelId, playerId, avatarId, nick, reply => {
           resolve(reply);
         })
       }).then(reply => {
@@ -63,8 +67,8 @@ async function handleQueueLeaveRequest(request, h){
   if(!request.auth.isAuthenticated){
     response = h.response(buildAuthenticationReply());
   } else {
-    if(!request.payload || !request.payload.queueId){
-      response = h.reponse(buildBadRequestReply());
+    if(!validateData(request.payload, schemas.leaveQueueRequestSchema)){
+      response = h.response(buildBadRequestReply());
     } else {
       const session = request.auth.credentials;
       const queueId = request.payload.queueId;
@@ -92,7 +96,7 @@ async function handleSessionLeaveRequest(request, h) {
   if(!request.auth.isAuthenticated){
     response = h.response(buildAuthenticationReply());
   } else {
-    if(!request.payload || !request.payload.sessionId) {
+    if(!validateData(request.payload, schemas.leaveQueueRequestSchema)) {
       response = h.reponse(buildBadRequestReply());
     } else {
       const session = request.auth.credentials;

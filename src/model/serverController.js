@@ -36,6 +36,7 @@ const {
   SESSION_MIN_START_PLAYERS,
   OBSERVER_MSG_ACTION_ABORT,
   OBSERVER_MSG_ACTION_ADD_PLAYER,
+  OBSERVER_MSG_ACTION_END,
   OBSERVER_MSG_ACTION_PLAYER_CONNECTION_LOST,
   OBSERVER_MSG_ACTION_START,
   OBSERVER_MSG_ACTION_VALIDATE
@@ -49,8 +50,8 @@ class Controller {
     this.players = [];
     this.queues = [];
 
-    this.abortSession = this.abortSession.bind(this);
     this.dlgPlayer = this.dlgPlayer.bind(this);
+    this.endSession = this.endSession.bind(this);
     this.gameSessionObserver = this.gameSessionObserver.bind(this);
     this.getLevelData = this.getLevelData.bind(this);
     this.getSessionData = this.getSessionData.bind(this);
@@ -351,7 +352,7 @@ class Controller {
   gameSessionObserver(gameSession, action) {
     switch(action) {
       case OBSERVER_MSG_ACTION_ABORT:
-        this.abortSession(gameSession);
+        this.endSession(gameSession);
         break;
       case OBSERVER_MSG_ACTION_VALIDATE:
         this.validateSession(gameSession);
@@ -361,6 +362,9 @@ class Controller {
         break;
       case OBSERVER_MSG_ACTION_PLAYER_CONNECTION_LOST:
         this.removePlayer(gameSession);
+        break;
+      case OBSERVER_MSG_ACTION_END:
+        this.endSession(gameSession);
         break;
       default:
         break;
@@ -395,12 +399,13 @@ class Controller {
     }
   }
 
-  //Aborts a recently created game session
-  abortSession(gameSession) {
+  //Removes a game session from the registered sessions
+  endSession(gameSession) {
     const index = this.gameSessions.indexOf(gameSession);
     if(index != -1){
       this.gameSessions.splice(index, index + 1);
     }
+    logger(`game session ${gameSession.sessionId} finished`);
   }
 
   //Removes a player from the server connected players
@@ -421,7 +426,6 @@ class Controller {
       callback(this.buildReplyData(SERVER_SERVICE_CRO, 2));
     }
   }
-
 }
 
 module.exports = Controller;

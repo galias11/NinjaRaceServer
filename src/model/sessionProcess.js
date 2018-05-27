@@ -4,15 +4,21 @@ const {
   findPlayerById,
   getNTPTime,
   validateToken,
-  webSocketSend
+  webSocketSend,
+  webSocketTerminate
 } = require('../utilities');
 
 // @Constants
 const {
-  PLAYER_STATE_PLAYING,
+  PLAYER_STATE_FINISHED,
+  PLAYER_STATE_INIT,
+  PLAYER_FINISH_STATE_COMPLETED,
+  PLAYER_FINISH_STATE_NOT_COMPLETED,
+  SESSION_FINISH_TIMER,
   SESSION_MSG_TYPE_ABORT,
   SESSION_MSG_TYPE_CREATE,
   SESSION_MSG_TYPE_CREATED,
+  SESSION_MSG_TYPE_END,
   SESSION_MSG_TYPE_ERR,
   SESSION_MSG_TYPE_INFO,
   SESSION_MSG_TYPE_INIT_SUCCESS,
@@ -44,14 +50,19 @@ class SessionProccess {
     this.syncStarted = false;
     this.readyCounterStarted = false;
     this.abortStarted = false;
+    this.finishStarted = false;
+    this.endingCounter = undefined;
 
     this.abortSession = this.abortSession.bind(this);
     this.buildMessage = this.buildMessage.bind(this);
+    this.checkEndingCondition = this.checkEndingCondition.bind(this);
     this.confirmSession = this.confirmSession.bind(this);
+    this.endSession = this.endSession.bind(this);
     this.handleDisconnect = this.handleDisconnect.bind(this);
     this.handlePublisherIncomingData = this.handlePublisherIncomingData.bind(this);
     this.initSession = this.initSession.bind(this);
     this.setPlayerReady = this.setPlayerReady.bind(this);
+    this.startFinishCounter = this.startFinishCounter.bind(this);
     this.startSession = this.startSession.bind(this);
     this.syncClients = this.syncClients.bind(this);
     this.updatePlayer = this.updatePlayer.bind(this);
@@ -173,7 +184,7 @@ class SessionProccess {
 
     this.players.forEach(player => {
       player.updateSessionState(this.level.startingPosX, this.level.startingPosY,
-                                this.level.startingDirectionId, PLAYER_STATE_PLAYING);
+                                this.level.startingDirectionId, PLAYER_STATE_INIT);
     });
     setTimeout(() => {
       this.gameLoop();
@@ -182,7 +193,7 @@ class SessionProccess {
 
   //Produces de game loop
   gameLoop() {
-    this.gameLoop = setInterval(() => {
+    this.gameLoopInterval = setInterval(() => {
       const players = this.players.map(player => {
         return {
           playerId: player.internalId,
@@ -286,7 +297,13 @@ class SessionProccess {
       const player = findPlayerById(playerData.playerId, this.players);
       if(player && validateToken(playerData.playerToken, player.secret)) {
         player.updateSessionState(playerData.position.x, playerData.position.y,
-                                  playerData.directionId);
+                                  playerData.directionId, playerData.state);
+        if(playerData.state == PLAYER_STATE_FINISHED) {
+          if(!this.endingCounter) {
+            this.startFinishCounter();
+          }
+          this.checkEndingCondition();
+        }
       }
     }
   }
@@ -312,6 +329,57 @@ class SessionProccess {
       webSocketSend(player, sessionData, this.handleDisconnect);
     });
     this.playersValidated = true;
+  }
+
+  //Starts game session sudden death time (activates when a player finish)
+  startFinishCounter() {
+    this.players.forEach(player => {
+      webSocketSend(player, { remainingTime: SESSION_FINISH_TIMER }, this.handleDisconnect);
+    });
+
+    this.endingCounter = setTimeout(() => {
+      this.endSession();
+    }, SESSION_FINISH_TIMER);
+  }
+
+  //Checks if all players in session have finished
+  checkEndingCondition() {
+    const finishedPlayers = this.players.filter(player => {
+      return player.hasFinished();
+    }).length;
+
+    if(finishedPlayers == this.players.length) {
+      this.endSession();
+    }
+  }
+
+  //Game session sucessful ending, sends last results and terminates the game.
+  endSession() {
+    if(this.endingCounter) {
+      clearTimeout(this.endingCounter);
+    }
+    clearInterval(this.gameLoopInterval);
+
+    const finalTable = this.players.map(player => {
+      return {
+        playerId: player.internalId,
+        status: player.sessionState.state == PLAYER_STATE_FINISHED ?
+          PLAYER_FINISH_STATE_COMPLETED : PLAYER_FINISH_STATE_NOT_COMPLETED,
+        time: player.getGameTime()
+      }
+    });
+
+    this.players.forEach(player => {
+      webSocketSend(player, finalTable, this.handleDisconnect);
+    });
+
+    this.abortStarted = true;
+    process.send(this.buildMessage(SESSION_MSG_TYPE_END));
+
+    setTimeout(() => {
+      webSocketTerminate(this.publisher);
+      process.exit(0);
+    }, SESSION_POST_ABORT_PROCESS_TTL);
   }
 }
 

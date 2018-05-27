@@ -40,6 +40,12 @@ const webSocketSend = (player, payload, errorListener) => {
   }
 };
 
+const webSocketTerminate = webSocket => {
+  webSocket.clients.forEach(client => {
+    client.close();
+  })
+};
+
 const getNTPTime = (callback) => {
   const options = {
     //host: NTP_ARGENTINA_POOL,
@@ -67,5 +73,6 @@ const getNTPTime = (callback) => {
 module.exports = {
   createPublisher,
   getNTPTime,
-  webSocketSend
+  webSocketSend,
+  webSocketTerminate
 }

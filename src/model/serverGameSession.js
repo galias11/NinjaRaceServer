@@ -14,8 +14,9 @@ const {
   SESSION_CONNECTION_VALIDATION_TIME,
   SESSION_MIN_PLAYERS_ABORT,
   OBSERVER_MSG_ACTION_ABORT,
-  OBSERVER_MSG_ACTION_START,
+  OBSERVER_MSG_ACTION_END,
   OBSERVER_MSG_ACTION_PLAYER_CONNECTION_LOST,
+  OBSERVER_MSG_ACTION_START,
   OBSERVER_MSG_ACTION_VALIDATE,
   SESSION_MSG_TYPE_ABORT,
   SESSION_MSG_TYPE_CREATE,
@@ -44,6 +45,7 @@ class GameSession {
 
     this.abortGame = this.abortGame.bind(this);
     this.buildMessage = this.buildMessage.bind(this);
+    this.finish = this.finish.bind(this);
     this.handleIncomingMsg = this.handleIncomingMsg.bind(this);
     this.initializeSession = this.initializeSession.bind(this);
     this.initValidationCounter = this.initValidationCounter.bind(this);
@@ -99,6 +101,7 @@ class GameSession {
       this.players = this.players.filter(player => {
         return player.internalId != playerId
       });
+      player.setInitialState();
       this.sessionObserver(playerId, OBSERVER_MSG_ACTION_PLAYER_CONNECTION_LOST);
       if(this.players.length <= SESSION_MIN_PLAYERS_ABORT) {
         this.sessionObserver(this, OBSERVER_MSG_ACTION_ABORT);
@@ -164,6 +167,7 @@ class GameSession {
           this.removePlayer(msg.payload.playerId);
           break;
         case SESSION_MSG_TYPE_END:
+          this.finish();
           break;
         case SESSION_MSG_TYPE_ABORT:
           logger(msg.payload);
@@ -177,19 +181,30 @@ class GameSession {
     }
   }
 
+  //Sets game session validated
   setValidated() {
     this.session.send(this.buildMessage(SESSION_MSG_TYPE_INIT_SUCCESS));
   }
 
+  //Sets game session started
   setStarted() {
     this.session.send(this.buildMessage(SESSION_MSG_TYPE_START));
   }
 
+  //Builds a message object
   buildMessage(type, payload) {
     return {
       type,
       payload
     }
+  }
+
+  //Successful end for the game session
+  finish() {
+    this.players.forEach(player => {
+      player.setInitialState();
+    });
+    this.sessionObserver(this, OBSERVER_MSG_ACTION_END);
   }
 }
 

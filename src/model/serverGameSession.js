@@ -89,7 +89,7 @@ class GameSession {
   }
 
   //Removes a player from the game session
-  removePlayer(playerId) {
+  removePlayer(playerId, notifySessionProcess) {
     const player = findPlayerById(playerId, this.players);
     if(player) {
       if(player.sessionValidated) {
@@ -102,6 +102,9 @@ class GameSession {
         return player.internalId != playerId
       });
       player.setInitialState();
+      if(notifySessionProcess) {
+        this.session.send(this.buildMessage(SESSION_MSG_TYPE_PLAYER_DISCONNECTED, playerId));
+      }
       this.sessionObserver(playerId, OBSERVER_MSG_ACTION_PLAYER_CONNECTION_LOST);
       if(this.players.length <= SESSION_MIN_PLAYERS_ABORT) {
         this.sessionObserver(this, OBSERVER_MSG_ACTION_ABORT);

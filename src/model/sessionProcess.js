@@ -63,6 +63,7 @@ class SessionProccess {
     this.handleDisconnect = this.handleDisconnect.bind(this);
     this.handlePublisherIncomingData = this.handlePublisherIncomingData.bind(this);
     this.initSession = this.initSession.bind(this);
+    this.removePlayer = this.removePlayer.bind(this);
     this.setPlayerReady = this.setPlayerReady.bind(this);
     this.startFinishCounter = this.startFinishCounter.bind(this);
     this.startSession = this.startSession.bind(this);
@@ -85,6 +86,9 @@ class SessionProccess {
         case SESSION_MSG_TYPE_START:
           this.gameStarted = true;
           this.syncClients();
+          break;
+        case SESSION_MSG_TYPE_PLAYER_DISCONNECTED:
+          this.removePlayer(data.payload);
           break;
         default:
           break;
@@ -207,6 +211,7 @@ class SessionProccess {
           state: player.sessionState.state
         };
       });
+      //console.log(this.players.length);
       this.players.forEach(player => {
         if(player.sessionReady && player.sessionConnected) {
           const data = {
@@ -282,6 +287,7 @@ class SessionProccess {
   handleDisconnect(player) {
     player.sessionConnected = false;
     const playerData = { playerId: player.internalId };
+    this.removePlayer(player.internalId);
     process.send(this.buildMessage(SESSION_MSG_TYPE_PLAYER_DISCONNECTED, playerData));
   }
 
@@ -382,6 +388,13 @@ class SessionProccess {
       webSocketTerminate(this.publisher);
       process.exit(0);
     }, SESSION_POST_ABORT_PROCESS_TTL);
+  }
+
+  //Removes a player from the game session
+  removePlayer(playerId) {
+    this.players = this.players.filter(player => {
+      return player.internalId != playerId
+    });
   }
 }
 

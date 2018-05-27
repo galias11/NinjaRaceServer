@@ -229,7 +229,7 @@ class Controller {
         queue.removePlayer(playerId)
       });
       this.gameSessions.forEach(gameSession => {
-        gameSession.removePlayer(playerId);
+        gameSession.removePlayer(playerId, true);
       });
       this.removePlayer(playerId);
       replyCode = 1;

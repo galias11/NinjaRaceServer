@@ -50,6 +50,7 @@ class Controller {
     this.players = [];
     this.queues = [];
 
+    this.abortJoinQueue = this.abortJoinQueue.bind(this);
     this.dlgPlayer = this.dlgPlayer.bind(this);
     this.endSession = this.endSession.bind(this);
     this.gameSessionObserver = this.gameSessionObserver.bind(this);
@@ -424,6 +425,14 @@ class Controller {
       callback(this.buildReplyData(SERVER_SERVICE_GSP, 1));
     } else {
       callback(this.buildReplyData(SERVER_SERVICE_CRO, 2));
+    }
+  }
+
+  //Undo a joinQueue request once it has started
+  abortJoinQueue(playerId, levelId) {
+    const queue = findQueueById(levelId, this.queues);
+    if(queue) {
+      queue.removePlayer(playerId);
     }
   }
 }

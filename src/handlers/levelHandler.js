@@ -17,7 +17,7 @@ async function handleLevelDataRequest(request, h) {
   if(!request.auth.isAuthenticated){
     response = h.response(buildAuthenticationReply());
   } else {
-    if(!validateData(request.query, schemas.levelRequestSchema)){
+    if(validateData(request.query, schemas.levelRequestSchema)){
       response = h.response(buildReply(request.server.methods.getLevelData(request.query.levelId)));
     } else {
       response = h.response(buildBadRequestReply());

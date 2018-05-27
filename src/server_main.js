@@ -51,6 +51,13 @@ async function serverInitialize() {
   server.method('joinQueue', controller.joinQueue, {});
   server.method('leaveQueue', controller.leaveQueue, {});
   server.method('removePlayerFromSession', controller.removePlayerFromSession, {});
+  server.method('abortJoinQueue', controller.abortJoinQueue, {});
+
+  server.events.on({ name: 'request' }, (request, event, tags) => {
+    if(tags.abort) {
+      handlers.handleAbort(request);
+    }
+  })
 
   //Server authentication settings
   const options = {

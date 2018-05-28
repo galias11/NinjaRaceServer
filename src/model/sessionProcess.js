@@ -35,6 +35,12 @@ const {
   SESSION_SC_COMM_LOAD_FINISH,
   SESSION_SC_COMM_START_SYNC,
   SESSION_SC_COMM_UPDATE,
+  SESSION_STATE_INITIALIZED,
+  SESSION_STATE_VALIDATED,
+  SESSION_STATE_SYNCHRONIZING,
+  SESSION_STATE_STARTED,
+  SESSION_STATE_FINISHED,
+  SESSION_STATE_ABORT,
   SESSION_SYNC_START_EMMITING_OFFSET,
   SESSION_SYNC_START_OFFSET,
   SESSION_UPDATE_RATE
@@ -47,9 +53,7 @@ class SessionProccess {
   constructor() {
     this.id = 0;
     this.players = [];
-    this.gameStarted = false;
-    this.playersValidated = false;
-    this.syncStarted = false;
+    this.state = SESSION_STATE_INITIALIZED;
     this.readyCounterStarted = false;
     this.abortStarted = false;
     this.finishStarted = false;
@@ -84,7 +88,7 @@ class SessionProccess {
           this.confirmSession();
           break;
         case SESSION_MSG_TYPE_START:
-          this.gameStarted = true;
+          this.gameStarting = true;
           this.syncClients();
           break;
         case SESSION_MSG_TYPE_PLAYER_DISCONNECTED:
@@ -143,7 +147,7 @@ class SessionProccess {
 
   //Aborts a recently started session
   abortSession(){
-    this.abortStarted = true;
+    this.state = SESSION_STATE_ABORT;
     this.players.forEach(player => {
       if(player.sessionValidated && player.sessionConnected) {
         const abortData = {
@@ -159,7 +163,7 @@ class SessionProccess {
 
   //Synchonizes clients and then starts game
   syncClients() {
-    if(this.gameStarted) {
+    if(this.state == SESSION_STATE_SYNCHRONIZING) {
       getNTPTime((reply) => {
         if(reply.error) {
           const abortMsg = `game session ${this.id} failed sync, aborting`;
@@ -185,6 +189,7 @@ class SessionProccess {
       }
     });
 
+    this.state = SESSION_STATE_STARTED;
     const infoMsg = `session ${this.id} sync data sent, starting in 5 segs...`;
     process.send(this.buildMessage(SESSION_MSG_TYPE_INFO, infoMsg));
 
@@ -215,7 +220,6 @@ class SessionProccess {
       this.players.forEach(player => {
         if(player.sessionReady && player.sessionConnected) {
           const data = {
-            sessionToken: this.sessionToken.token,
             players: players
           };
           const updateData = this.buildMessage(SESSION_SC_COMM_UPDATE, data);
@@ -231,7 +235,7 @@ class SessionProccess {
     const playerId = validateData.playerId;
     //const playerToken = validateData.playerToken;
 
-    if(!this.playersValidated && validateToken(sessionToken, this.sessionToken.secret)) {
+    if(validateToken(sessionToken, this.sessionToken.secret)) {
       const player = findPlayerById(playerId, this.players);
       //TODO: uncomment when it is not a mock test
       if(player && !player.sessionValidated /*&& player.validate(playerToken)*/) {
@@ -244,25 +248,21 @@ class SessionProccess {
 
   //Sets a player ready when level loading finishes
   setPlayerReady(playerData) {
-    const sessionToken = playerData.sessionToken;
     const playerId = playerData.playerId;
-    const playerToken = playerData.playerToken;
 
-    if(this.playersValidated && !this.gameStarted && validateToken(sessionToken, this.sessionToken.secret)) {
-      const player = findPlayerById(playerId, this.players);
-      if(player && player.sessionValidated && !player.sessionReady && player.validate(playerToken)) {
-        const msgPayload = {
-          playerId: player.internalId,
-          initCounter: !this.syncStarted
-        };
+    const player = findPlayerById(playerId, this.players);
+    if(player && player.sessionValidated) {
+      const msgPayload = {
+        playerId: player.internalId,
+        initCounter: !(this.state == SESSION_STATE_SYNCHRONIZING)
+      };
 
-        if(!this.syncStarted) {
-          this.syncStarted = true;
-        }
-
-        player.sessionReady = true;
-        process.send(this.buildMessage(SESSION_MSG_TYPE_PLAYER_READY, msgPayload));
+      if(this.state == SESSION_STATE_VALIDATED) {
+        this.state = SESSION_STATE_SYNCHRONIZING;
       }
+
+      player.sessionReady = true;
+      process.send(this.buildMessage(SESSION_MSG_TYPE_PLAYER_READY, msgPayload));
     }
   }
 
@@ -270,13 +270,19 @@ class SessionProccess {
   handlePublisherIncomingData(data){
     switch(data.type){
       case SESSION_SC_COMM_ACK:
-        this.validatePlayer(data.payload, data.connection);
+        if(this.state == SESSION_STATE_INITIALIZED) {
+          this.validatePlayer(data.payload, data.connection);
+        }
         break;
       case SESSION_SC_COMM_LOAD_FINISH:
-        this.setPlayerReady(data.payload);
+        if(this.state == SESSION_STATE_VALIDATED || this.state == SESSION_STATE_SYNCHRONIZING) {
+          this.setPlayerReady(data.payload);
+        }
         break;
       case SESSION_SC_COMM_UPDATE:
-        this.updatePlayer(data.payload);
+        if(this.state == SESSION_STATE_STARTED) {
+          this.updatePlayer(data.payload);
+        }
         break;
       default:
         break;
@@ -301,9 +307,9 @@ class SessionProccess {
 
   //Updates player state in the session
   updatePlayer(playerData) {
-    if(playerData && validateToken(playerData.sessionToken, this.sessionToken.secret)) {
+    if(playerData) {
       const player = findPlayerById(playerData.playerId, this.players);
-      if(player && validateToken(playerData.playerToken, player.secret)) {
+      if(player) {
         player.updateSessionState(playerData.position.x, playerData.position.y,
                                   playerData.directionId, playerData.state);
         if(playerData.state == PLAYER_STATE_FINISHED) {
@@ -336,7 +342,7 @@ class SessionProccess {
       });
       webSocketSend(player, sessionData, this.handleDisconnect);
     });
-    this.playersValidated = true;
+    this.state = SESSION_STATE_VALIDATED;
   }
 
   //Starts game session sudden death time (activates when a player finish)
@@ -381,7 +387,7 @@ class SessionProccess {
       webSocketSend(player, finalTable, this.handleDisconnect);
     });
 
-    this.abortStarted = true;
+    this.state = SESSION_STATE_FINISHED;
     process.send(this.buildMessage(SESSION_MSG_TYPE_END));
 
     setTimeout(() => {

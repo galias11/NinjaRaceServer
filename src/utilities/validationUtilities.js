@@ -51,18 +51,14 @@ const sessionConnValidationSchema = Joi.object().keys({
 const sessionLoadFinishSchema = Joi.object().keys({
   type: Joi.string().valid(SESSION_SC_COMM_LOAD_FINISH).required(),
   payload: Joi.object().keys({
-    sessionToken: Joi.string().required(),
-    playerId: Joi.number().integer().required(),
-    playerToken: Joi.string().required()
+    playerId: Joi.number().integer().required()
   })
 });
 
 const sessionPlayerUpdateSchema = Joi.object().keys({
   type: Joi.string().valid(SESSION_SC_COMM_UPDATE).required(),
   payload: Joi.object().keys({
-    sessionToken: Joi.string().required(),
     playerId: Joi.number().integer().required(),
-    playerToken: Joi.string().required(),
     position: Joi.object().keys({
       x: Joi.number().required(),
       y: Joi.number().required()

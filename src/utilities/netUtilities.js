@@ -46,6 +46,10 @@ const webSocketTerminate = webSocket => {
   })
 };
 
+const checkWebSocketConn = webSocket => {
+  return webSocket && webSocket.readyState === webSocket.OPEN
+}
+
 const getNTPTime = (callback) => {
   const options = {
     //host: NTP_ARGENTINA_POOL,
@@ -71,6 +75,7 @@ const getNTPTime = (callback) => {
 };
 
 module.exports = {
+  checkWebSocketConn,
   createPublisher,
   getNTPTime,
   webSocketSend,

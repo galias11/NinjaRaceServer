@@ -52,7 +52,16 @@ const findSessionById = (id, sessions) => {
   }
 };
 
+//Builds a message for IPC comm
+const buildMessage = (type, payload) => {
+  return {
+    type,
+    payload: payload
+  }
+}
+
 module.exports = {
+  buildMessage,
   findAvatarById,
   findLevel,
   findPlayerById,

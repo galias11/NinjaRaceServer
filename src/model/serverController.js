@@ -32,14 +32,10 @@ const {
   SERVER_SERVICE_JQR,
   SERVER_SERVICE_LQR,
   SERVER_SERVICE_GSP,
-  SESSION_MIN_GAME_PLAYERS,
   SESSION_MIN_START_PLAYERS,
   OBSERVER_MSG_ACTION_ABORT,
   OBSERVER_MSG_ACTION_ADD_PLAYER,
-  OBSERVER_MSG_ACTION_END,
-  OBSERVER_MSG_ACTION_PLAYER_CONNECTION_LOST,
-  OBSERVER_MSG_ACTION_START,
-  OBSERVER_MSG_ACTION_VALIDATE
+  OBSERVER_MSG_ACTION_END
 } = require('../constants');
 
 class Controller {
@@ -66,8 +62,6 @@ class Controller {
     this.registerPlayer = this.registerPlayer.bind(this);
     this.removePlayer = this.removePlayer.bind(this);
     this.removePlayerFromSession = this.removePlayerFromSession.bind(this);
-    this.validateSession = this.validateSession.bind(this);
-    this.validateStart = this.validateStart.bind(this);
     this.validateLevelData = this.validateLevelData.bind(this);
     this.validatePlayerData = this.validatePlayerData.bind(this);
   }
@@ -355,48 +349,11 @@ class Controller {
       case OBSERVER_MSG_ACTION_ABORT:
         this.endSession(gameSession);
         break;
-      case OBSERVER_MSG_ACTION_VALIDATE:
-        this.validateSession(gameSession);
-        break;
-      case OBSERVER_MSG_ACTION_START:
-        this.validateStart(gameSession);
-        break;
-      case OBSERVER_MSG_ACTION_PLAYER_CONNECTION_LOST:
-        this.removePlayer(gameSession);
-        break;
       case OBSERVER_MSG_ACTION_END:
         this.endSession(gameSession);
         break;
       default:
         break;
-    }
-  }
-
-  //Validates if a game can be started
-  validateSession(gameSession) {
-    const validatedPlayers = gameSession.validatedPlayers;
-    const gameSessionId = gameSession.sessionId;
-    logger(`processing game session ${gameSession.sessionId} validation`);
-    if(validatedPlayers >= SESSION_MIN_GAME_PLAYERS) {
-      gameSession.setValidated();
-      logger(`game session ${gameSessionId} initialized with ${validatedPlayers} players`);
-    } else {
-      logger(`game session ${gameSessionId} aborted due to not enough validated players`);
-      gameSession.abortGame();
-    }
-  }
-
-  //Validates if a game can be started
-  validateStart(gameSession) {
-    const readyPlayers = gameSession.readyPlayers;
-    const gameSessionId = gameSession.sessionId;
-    logger(`processing game session ${gameSession.sessionId} sync`);
-    if(readyPlayers >= SESSION_MIN_GAME_PLAYERS) {
-      logger(`game session ${gameSessionId} starting sync for ${readyPlayers} players`);
-      gameSession.startGame();
-    } else {
-      logger(`game session ${gameSessionId} aborted due to not enough validated players`);
-      gameSession.abortGame();
     }
   }
 
@@ -406,7 +363,6 @@ class Controller {
     if(index != -1){
       this.gameSessions.splice(index, index + 1);
     }
-    logger(`game session ${gameSession.sessionId} finished`);
   }
 
   //Removes a player from the server connected players

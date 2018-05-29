@@ -40,23 +40,24 @@ const loginRequestSchema = Joi.object().keys({
 
 //TODO: add player token as required when in production
 const sessionConnValidationSchema = Joi.object().keys({
-  type: Joi.string().valid(SESSION_SC_COMM_ACK).required(),
+  type: Joi.number().valid(SESSION_SC_COMM_ACK).required(),
   payload: Joi.object().keys({
     sessionToken: Joi.string().required(),
     playerId: Joi.number().integer().required(),
     playerToken: Joi.string().allow('')
-  })
+  }),
+  connection: Joi.any()
 });
 
 const sessionLoadFinishSchema = Joi.object().keys({
-  type: Joi.string().valid(SESSION_SC_COMM_LOAD_FINISH).required(),
+  type: Joi.number().valid(SESSION_SC_COMM_LOAD_FINISH).required(),
   payload: Joi.object().keys({
     playerId: Joi.number().integer().required()
   })
 });
 
 const sessionPlayerUpdateSchema = Joi.object().keys({
-  type: Joi.string().valid(SESSION_SC_COMM_UPDATE).required(),
+  type: Joi.number().valid(SESSION_SC_COMM_UPDATE).required(),
   payload: Joi.object().keys({
     playerId: Joi.number().integer().required(),
     position: Joi.object().keys({
@@ -88,6 +89,9 @@ const schemas = {
   levelRequestSchema,
   loginRequestSchema,
   registerPlayerSchema,
+  sessionConnValidationSchema,
+  sessionLoadFinishSchema,
+  sessionPlayerUpdateSchema,
   sessionIncomingData
 }
 

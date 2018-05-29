@@ -3,5 +3,5 @@
 const Controller = require('./serverController');
 
 module.exports = {
-  Controller
+    Controller
 }

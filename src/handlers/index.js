@@ -5,7 +5,7 @@ const playerHandlers = require('./playerHandler');
 const abortHandlers = require('./abortHandler');
 
 module.exports = {
-  ...abortHandlers,
-  ...levelHandlers,
-  ...playerHandlers
+    ...abortHandlers,
+    ...levelHandlers,
+    ...playerHandlers
 }

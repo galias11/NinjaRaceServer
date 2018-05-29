@@ -10,12 +10,12 @@ const logginUtilities = require('./logginUtilities');
 const validationUtilities = require('./validationUtilities');
 
 module.exports = {
-  ...mysqlUtilities,
-  ...netUtilities,
-  ...replyUtilities,
-  ...timeUtilities,
-  ...commonUtilities,
-  ...encryptUtilities,
-  ...logginUtilities,
-  ...validationUtilities
+    ...mysqlUtilities,
+    ...netUtilities,
+    ...replyUtilities,
+    ...timeUtilities,
+    ...commonUtilities,
+    ...encryptUtilities,
+    ...logginUtilities,
+    ...validationUtilities
 }

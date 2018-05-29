@@ -1,8 +1,8 @@
 class Avatar {
-  constructor(id, clientFile) {
-    this.id = id;
-    this.clientFile = clientFile;
-  }
+    constructor(id, clientFile) {
+        this.id = id;
+        this.clientFile = clientFile;
+    }
 
 }
 

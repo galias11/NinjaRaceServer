@@ -24,6 +24,7 @@ const {
 
 // @Constants
 const {
+    SERVER_USER_OVER_LOGIN_TIME,
     SERVER_SERVICE_CRO,
     SERVER_SERVICE_LOG,
     SERVER_SERVICE_REG,
@@ -175,6 +176,9 @@ class Controller {
             const player = mapPlayer(data.playerData);
             if(findPlayerByEmail(player.email, this.players)){
                 result = this.buildReplyData(SERVER_SERVICE_LOG, 1);
+                setTimeout(() => {
+                    this.removePlayer(player.internalId);
+                }, SERVER_USER_OVER_LOGIN_TIME);
             } else {
                 this.players.push(player);
                 result = this.buildReplyData(

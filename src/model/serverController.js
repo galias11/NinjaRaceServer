@@ -178,12 +178,11 @@ class Controller {
             } else {
                 this.players.push(player);
                 result = this.buildReplyData(
-          SERVER_SERVICE_LOG,
-          3,
-          {
-              playerId: player.internalId,
-              token: player.generateToken()
-          }
+                    SERVER_SERVICE_LOG, 3,
+                    {
+                        playerId: player.internalId,
+                        token: player.generateToken()
+                    }
                 );
             }
         }

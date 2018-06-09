@@ -8,7 +8,8 @@ const routes = {
     PLAYER_LOGIN_REQUEST: '/login',
     PLAYER_LOGOUT_REQUEST: '/logout',
     PLAYER_REGISTER_REQUEST: '/register',
-    TEST_ENV_SET_UP_REQUEST: '/envSetup'
+    TEST_ENV_SET_UP_REQUEST: '/envSetup',
+    UPDATE_RECORD: '/updateRecord'
 }
 
 module.exports = routes;

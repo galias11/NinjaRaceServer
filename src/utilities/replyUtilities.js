@@ -100,9 +100,10 @@ const LOG02 = () => ({
     }
 })
 
-const LOG03 = () => ({
+const LOG03 = (playerData) => ({
     payload: {
-        success: true
+        success: true,
+        playerData
     }
 });
 
@@ -184,7 +185,7 @@ const buildReply = (reply) => {
                 case 2:
                     return LOG02();
                 case 3:
-                    return LOG03();
+                    return LOG03(reply.payload);
                 default:
                     return UNKNOWN();
             }

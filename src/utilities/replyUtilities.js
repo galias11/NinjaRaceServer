@@ -144,6 +144,12 @@ const GSP01 = () => ({
     }
 });
 
+const TES01 = () => ({
+    payload: {
+        environmentSetUp: true
+    }
+});
+
 //Builds a reply
 const buildReply = (reply) => {
     switch (reply.service) {
@@ -237,9 +243,14 @@ const buildFailureReply = () => {
     return CRO03();
 }
 
+const buildTestRequestSuccessReply = () => {
+    return TES01();
+}
+
 module.exports = {
     buildAuthenticationReply,
     buildBadRequestReply,
     buildFailureReply,
-    buildReply
+    buildReply,
+    buildTestRequestSuccessReply
 }

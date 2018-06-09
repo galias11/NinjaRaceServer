@@ -111,7 +111,7 @@ async function login(email, pword, callback) {
 
     const reply = await new Promise((resolve, reject) => {
         mysqlQuery(searchData, (response) => {
-            if(response.error || response.data.length > 1) {
+            if(response.error || response.data.length != 1) {
                 reject();
             }
             resolve(response);

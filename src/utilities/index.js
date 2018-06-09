@@ -8,6 +8,7 @@ const commonUtilities = require('./commonUtilities');
 const encryptUtilities = require('./encryptUtilities');
 const logginUtilities = require('./logginUtilities');
 const validationUtilities = require('./validationUtilities');
+const testUtilities = require('./testUtilities');
 
 module.exports = {
     ...mysqlUtilities,
@@ -17,5 +18,6 @@ module.exports = {
     ...commonUtilities,
     ...encryptUtilities,
     ...logginUtilities,
-    ...validationUtilities
+    ...validationUtilities,
+    ...testUtilities
 }

@@ -11,7 +11,8 @@ const mysqlConnection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: 'n1nj4r4c3',
-    database: 'ninjaRaceDB'
+    database: 'ninjaRaceDB',
+    multipleStatements: true
 });
 
 const selectStatement = (table, condition, ...fields) => {
@@ -63,6 +64,7 @@ const mysqlQuery = (query, callback) => {
             error: false,
             data: {}
         };
+
         if(err) {
             response.error = true;
         } else {

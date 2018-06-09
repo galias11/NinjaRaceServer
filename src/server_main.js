@@ -52,6 +52,8 @@ async function serverInitialize() {
     server.method('leaveQueue', controller.leaveQueue, {});
     server.method('removePlayerFromSession', controller.removePlayerFromSession, {});
     server.method('abortJoinQueue', controller.abortJoinQueue, {});
+    //server.method('testMockLevels', controller.testMockLevels, {});
+    //server.method('testMockPlayers', controller.testMockPlayers, {});
 
     server.events.on({ name: 'request' }, (request, event, tags) => {
         if(tags.abort) {
@@ -135,7 +137,14 @@ async function serverInitialize() {
         path: routes.LEAVE_SESSION_REQUEST,
         config: authPolicy,
         handler: handlers.handleSessionLeaveRequest
-    })
+    });
+
+    // Enabling this handler is prohibited unless the project is on testing
+    /*server.route({
+        method: SERVER_MAIN_METHOD_POST,
+        path: routes.TEST_ENV_SET_UP_REQUEST,
+        handler: handlers.handleEnvironmentSetup
+    });*/
 
     //After server is set up, we make server start in order to listen the desired port
     try {

@@ -9,6 +9,9 @@ const commConstants = require('./commConstants');
 // @parameters
 const parameters = require('./parameters');
 
+// @Testing
+const testCodes = require('./testConstants');
+
 const serverConstants = {
     PLAYER_STATE_DISCONNECTED: 'D',
     PLAYER_STATE_FINISHED: 'F',
@@ -23,12 +26,12 @@ const serverConstants = {
     SERVER_MAIN_METHOD_GET: 'GET',
     SERVER_MAIN_METHOD_POST: 'POST',
     SERVER_MAIN_PORT: 8080,
-    SERVER_MAIN_IP: '192.168.0.106',
+    SERVER_MAIN_IP: '192.168.1.107',
     SERVER_DB_QUOTED_TYPE: 'QT',
     SERVER_DB_NON_QUOTED_TYPE: 'NQT',
-    SERVER_TABLE_LEVELS: 'levels',
-    SERVER_TABLE_PLAYER: 'players',
-    SERVER_TABLE_AVATAR: 'avatars',
+    SERVER_TABLE_LEVELS: 'level',
+    SERVER_TABLE_PLAYER: 'player',
+    SERVER_TABLE_AVATAR: 'avatar',
     SESSION_STATE_INITIALIZED: 0,
     SESSION_STATE_VALIDATED: 1,
     SESSION_STATE_SYNCHRONIZING: 2,
@@ -42,5 +45,6 @@ module.exports = {
     ...commConstants,
     ...parameters,
     ...repliesConstants,
-    ...serverConstants
+    ...serverConstants,
+    testCodes
 };

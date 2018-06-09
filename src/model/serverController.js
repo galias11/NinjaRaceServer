@@ -64,6 +64,9 @@ class Controller {
         this.removePlayerFromSession = this.removePlayerFromSession.bind(this);
         this.validateLevelData = this.validateLevelData.bind(this);
         this.validatePlayerData = this.validatePlayerData.bind(this);
+
+        //this.testMockLevels = this.testMockLevels.bind(this);
+        //this.testMockPlayers = this.testMockPlayers.bind(this);
     }
 
     //Builds a reply data object
@@ -157,6 +160,9 @@ class Controller {
             return this.buildReplyData(SERVER_SERVICE_CRO, 3);
         });
 
+        //Activate only for testing purposes
+        /*console.log(this.players);*/
+
         callback(reply);
     }
 
@@ -230,6 +236,10 @@ class Controller {
         } else {
             replyCode = 2;
         }
+
+        // Enable this line only for testing purposes
+        /*console.log(this.players);*/
+
         callback(this.buildReplyData(SERVER_SERVICE_DLG, replyCode));
     }
 
@@ -264,6 +274,13 @@ class Controller {
         } else {
             reply = this.buildReplyData(SERVER_SERVICE_CRO, 2);
         }
+
+        //Enable only for testing purposes
+        /*this.queues.forEach(queue => {
+            console.log(queue.levelId);
+            console.log(queue.waitingPlayers);
+        });*/
+
         callback(reply);
     }
 
@@ -341,10 +358,16 @@ class Controller {
             default:
                 break;
         }
+
+        //Use only for testing purposes
+        /*console.log(queue.waitingPlayers);*/
     }
 
     //Observes created game session events
     gameSessionObserver(gameSession, action) {
+        //Use only for testing purposes
+        /*console.log(gameSession.players);*/
+    
         switch(action) {
             case OBSERVER_MSG_ACTION_ABORT:
                 this.endSession(gameSession);
@@ -391,6 +414,20 @@ class Controller {
             queue.removePlayer(playerId);
         }
     }
+
+    //Enable the next methods only for testing
+    /*
+    //Mocks level data for testing
+    testMockLevels(levels) {
+        this.levels = levels.slice();
+    }
+
+    //Mocks player data for testing
+    testMockPlayers(players) {
+        this.players = players.slice();
+    }
+    */
+
 }
 
 module.exports = Controller;

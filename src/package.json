@@ -18,6 +18,7 @@
   "homepage": "https://github.com/galias11/NinjaRace#readme",
   "dependencies": {
     "csrf": "^3.0.6",
+    "fetch": "^1.1.0",
     "get-port": "^3.2.0",
     "hapi": "^17.4.0",
     "hapi-auth-cookie": "^8.1.0",

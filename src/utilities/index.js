@@ -4,18 +4,20 @@ const mysqlUtilities = require('./mysqlUtilities');
 const netUtilities = require('./netUtilities');
 const replyUtilities = require('./replyUtilities');
 const timeUtilities = require('./timeUtilities');
-const stringUtilities = require('./stringUtilities');
 const commonUtilities = require('./commonUtilities');
 const encryptUtilities = require('./encryptUtilities');
 const logginUtilities = require('./logginUtilities');
+const validationUtilities = require('./validationUtilities');
+const testUtilities = require('./testUtilities');
 
 module.exports = {
-  ...mysqlUtilities,
-  ...netUtilities,
-  ...replyUtilities,
-  ...timeUtilities,
-  ...stringUtilities,
-  ...commonUtilities,
-  ...encryptUtilities,
-  ...logginUtilities
+    ...mysqlUtilities,
+    ...netUtilities,
+    ...replyUtilities,
+    ...timeUtilities,
+    ...commonUtilities,
+    ...encryptUtilities,
+    ...logginUtilities,
+    ...validationUtilities,
+    ...testUtilities
 }

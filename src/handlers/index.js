@@ -2,8 +2,12 @@
 
 const levelHandlers = require('./levelHandler');
 const playerHandlers = require('./playerHandler');
+const abortHandlers = require('./abortHandler');
+const testHandlers = require('./testHandler');
 
 module.exports = {
-  ...levelHandlers,
-  ...playerHandlers
+    ...abortHandlers,
+    ...levelHandlers,
+    ...playerHandlers,
+    ...testHandlers
 }

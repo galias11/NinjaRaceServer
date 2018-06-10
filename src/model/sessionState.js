@@ -168,7 +168,7 @@ class ValidatedState extends SessionState {
     act() {
         this.session.players.forEach(sessionPlayer => {
             const playersData = this.session.players.filter(player => 
-                player.internalId == sessionPlayer.internalId
+                player.internalId != sessionPlayer.internalId
             ).map(player => {
                 return {
                     playerId: player.internalId,

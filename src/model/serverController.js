@@ -177,7 +177,7 @@ class Controller {
             if(findPlayerByEmail(player.email, this.players)){
                 result = this.buildReplyData(SERVER_SERVICE_LOG, 1);
                 setTimeout(() => {
-                    this.removePlayer(player.internalId);
+                    this.dlgPlayer(player.internalId, () => {});
                 }, SERVER_USER_OVER_LOGIN_TIME);
             } else {
                 this.players.push(player);

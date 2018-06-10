@@ -60,6 +60,19 @@ const buildMessage = (type, payload) => {
     }
 }
 
+//Sanitizes godot client websocket data
+const sanitizeData = (msg) => {
+    if(msg) {
+        const dataChunks = msg.match(/.{1,104}/g);
+        //console.log(dataChunks); 
+        let sanitizeData;
+        dataChunks.forEach(chunk => {
+            sanitizeData += chunk.substring(4);
+        });
+        return sanitizeData.split('undefined')[1];
+    }
+}
+
 module.exports = {
     buildMessage,
     findAvatarById,
@@ -67,5 +80,6 @@ module.exports = {
     findPlayerById,
     findPlayerByEmail,
     findQueueById,
-    findSessionById
+    findSessionById,
+    sanitizeData
 };

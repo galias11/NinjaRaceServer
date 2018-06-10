@@ -23,6 +23,7 @@ const {
     SESSION_FINISH_TIMER,
     SESSION_MIN_GAME_PLAYERS,
     SESSION_POST_ABORT_PROCESS_TTL,
+    SESSION_SC_COMM_CREATED,
     SESSION_SC_COMM_END,
     SESSION_SC_COMM_START_SYNC,
     SESSION_SC_COMM_UPDATE,
@@ -162,6 +163,28 @@ class ValidatedState extends SessionState {
                 logger(`player ${player.internalId} ready to start on session ${this.session.id}`);
             }
         }
+    }
+
+    act() {
+        this.session.players.forEach(sessionPlayer => {
+            const playersData = this.session.players.filter(player => 
+                player.internalId == sessionPlayer.internalId
+            ).map(player => {
+                return {
+                    playerId: player.internalId,
+                    avatarId: player.sessionAvatar.id,
+                    nick: player.sessionNick,
+                    colorId: player.colorId
+                };
+            });
+
+            const sessionCreatedData = {
+                type: SESSION_SC_COMM_CREATED,
+                playersData
+            };
+
+            webSocketSend(sessionPlayer, sessionCreatedData, this.session.handleDisconnect);
+        });
     }
 }
 

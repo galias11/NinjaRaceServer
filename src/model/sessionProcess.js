@@ -2,11 +2,13 @@
 const {
     buildMessage,
     createPublisher,
-    logger
+    logger,
+    sanitizeData
 } = require('../utilities');
 
 // @Constants
 const {
+    ENABLE_GODOT_WS_SANITIZER,
     SESSION_MSG_TYPE_ABORT,
     SESSION_MSG_TYPE_CREATE,
     SESSION_MSG_TYPE_CREATED,
@@ -89,7 +91,12 @@ class SessionProccess {
                     ws.on('message', message => {
                         let incomingData;
                         try {
-                            incomingData = JSON.parse(message);
+                            if(ENABLE_GODOT_WS_SANITIZER) {
+                                incomingData = JSON.parse(sanitizeData(message));
+                            }
+                            else {
+                                incomingData = JSON.parse(message);
+                            }
                             this.handlePublisherIncomingData(incomingData, ws);
                         } catch(err) {
                             //ignores non JSON parseable msgs

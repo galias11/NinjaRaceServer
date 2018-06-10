@@ -3,6 +3,7 @@ const mysql = require('mysql');
 
 // @Constants
 const {
+    MYSQL_MULTIPLE_STATEMENTS,
     SERVER_DB_QUOTED_TYPE,
     SERVER_DB_NON_QUOTED_TYPE
 } = require('../constants');
@@ -12,7 +13,7 @@ const mysqlConnection = mysql.createConnection({
     user: 'root',
     password: 'n1nj4r4c3',
     database: 'ninjaRaceDB',
-    multipleStatements: true
+    multipleStatements: MYSQL_MULTIPLE_STATEMENTS 
 });
 
 const selectStatement = (table, condition, ...fields) => {

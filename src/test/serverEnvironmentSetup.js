@@ -32,7 +32,7 @@ const SVF_02 = [
 
 const SVF_03 = [
     new Player(1, 'mail1@gmail.com'),
-    new Player(3, 'prueba.mail@gmail.com'),
+    new Player(2, 'prueba.mail@gmail.com'),
     new Player(4, 'mail2@gmail.com')
 ];
 

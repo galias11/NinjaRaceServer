@@ -63,10 +63,10 @@ const RESET = `
 const DBF_01 = `
     SET SQL_SAFE_UPDATES = 0;
     delete from player;
-    insert into player (email, pword) values 
-	    ('mail1@gmail.com', '${cryptPassword(defaultPassword)}'),
-        ('prueba.mail@gmail.com', '${cryptPassword(defaultPassword)}'),
-	    ('mail2@gmail.com', '${cryptPassword(defaultPassword)}');
+    insert into player values 
+	    (1, 'mail1@gmail.com', '${cryptPassword(defaultPassword)}'),
+        (2, 'prueba.mail@gmail.com', '${cryptPassword(defaultPassword)}'),
+	    (4, 'mail2@gmail.com', '${cryptPassword(defaultPassword)}');
 `;
 
 const DBF_02 = `
@@ -77,16 +77,16 @@ const DBF_02 = `
 const DBF_03 = `
     SET SQL_SAFE_UPDATES = 0;
     delete from player;
-    insert into player (email, pword) values 
-	    ('mail1@gmail.com', '${cryptPassword(defaultPassword)}');
+    insert into player values 
+	    (1, 'mail1@gmail.com', '${cryptPassword(defaultPassword)}');
 `;
 
 const DBH_01 = `
     SET SQL_SAFE_UPDATES = 0;
     delete from player;
-    insert into player (email, pword) values 
-	    ('mail1@gmail.com', '${cryptPassword(defaultPassword)}'),
-	    ('mail2@gmail.com', '${cryptPassword(defaultPassword)}');  
+    insert into player values 
+	    (1, 'mail1@gmail.com', '${cryptPassword(defaultPassword)}'),
+	    (2, 'mail2@gmail.com', '${cryptPassword(defaultPassword)}');  
 `;
 
 const DBH_02 = `
@@ -97,8 +97,8 @@ const DBH_02 = `
 const DBH_03 = `
     SET SQL_SAFE_UPDATES = 0;
     delete from player;
-    insert into player (email, pword) values 
-	    ('mail1@gmail.com', '${cryptPassword(defaultPassword)}');
+    insert into player values 
+	    (1, 'mail1@gmail.com', '${cryptPassword(defaultPassword)}');
 `;
 
 module.exports = {

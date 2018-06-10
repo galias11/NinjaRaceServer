@@ -1,6 +1,7 @@
 //By adjusting these parameters several server behaviours can be adjusted
 const sessionParameters = {
     ENABLE_GODOT_WS_SANITIZER: false,
+    MYSQL_MULTIPLE_STATEMENTS: false, //Disable in prod environment
     NTP_ARGENTINA_POOL: 'ar.pool.ntp.org',
     NTP_PORT: 123,
     NTP_REQUEST_TIMEOUT: 5 * 1000,

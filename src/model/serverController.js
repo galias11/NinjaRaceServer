@@ -395,7 +395,7 @@ class Controller {
     removePlayer(playerId) {
         this.players = this.players.filter(player => {
             return player.internalId != playerId;
-        })
+        });
     }
 
     //Removes a player from a game session

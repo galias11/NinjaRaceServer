@@ -43,9 +43,10 @@ class Player {
 
     }
 
-    setSessionData(avatar, nick) {
-        this.sessionNick = nick;
+    setSessionData(avatar, color, nick) {
         this.sessionAvatar = avatar;
+        this.sessionColor = color;
+        this.sessionNick = nick;
     }
 
     //Validates player token
@@ -94,6 +95,7 @@ class Player {
     setInitialState() {
         this.sessionNick = '';
         this.sessionAvatar = undefined;
+        this.sessionColor = undefined;
         this.inactiveTime = 0;
         this.queueArrivalTime = 0.0;
         this.queueListener = undefined;

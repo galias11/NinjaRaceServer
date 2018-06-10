@@ -247,7 +247,7 @@ class Controller {
     }
 
     //Validates player data and port and, if valid, joins player to a queue for a specific level
-    joinQueue(levelId, playerId, avatarId, nick, callback) {
+    joinQueue(levelId, playerId, avatarId, nick, colorId, callback) {
         const player = findPlayerById(playerId, this.players);
         if(!player) {
             callback(this.buildReplyData(SERVER_SERVICE_CRO, 2));
@@ -256,7 +256,7 @@ class Controller {
         const playerData = this.validatePlayerData(playerId, avatarId);
         const queueData = this.validateLevelData(levelId);
         if(playerData.valid && queueData.valid){
-            playerData.player.setSessionData(playerData.avatar, nick);
+            playerData.player.setSessionData(playerData.avatar, colorId, nick);
             queueData.queue.addPlayer(playerData.player, sessionData => {
                 callback(this.buildReplyData(SERVER_SERVICE_JQR, 1, sessionData));
             });

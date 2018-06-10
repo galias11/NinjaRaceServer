@@ -22,7 +22,8 @@ const levelRequestSchema = Joi.object().keys({
 const joinQueueRequestSchema = Joi.object().keys({
     levelId: Joi.number().integer().required(),
     avatarId: Joi.number().integer().required(),
-    nick: Joi.string().min(1).max(16).required()
+    nick: Joi.string().min(1).max(16).required(),
+    colorId: Joi.number().integer().required()
 });
 
 const leaveQueueRequestSchema = Joi.object().keys({

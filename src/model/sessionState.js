@@ -173,8 +173,8 @@ class ValidatedState extends SessionState {
                 return {
                     playerId: player.internalId,
                     avatarId: player.sessionAvatar.id,
-                    nick: player.sessionNick,
-                    colorId: player.colorId
+                    colorId: player.sessionColor,
+                    nick: player.sessionNick
                 };
             });
 

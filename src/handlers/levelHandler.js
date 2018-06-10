@@ -43,10 +43,11 @@ async function handleQueueJoinRequest(request, h) {
             const playerId = session.playerId;
             const levelId = request.payload.levelId;
             const avatarId = request.payload.avatarId;
+            const colorId = request.payload.colorId;
             const nick = request.payload.nick;
 
             response = await new Promise((resolve) => {
-                request.server.methods.joinQueue(levelId, playerId, avatarId, nick, reply => {
+                request.server.methods.joinQueue(levelId, playerId, avatarId, nick, colorId, reply => {
                     resolve(reply);
                 })
             }).then(reply => {

@@ -6,7 +6,8 @@ const originServiceConstants = {
     SERVER_SERVICE_DLG: 'logout',
     SERVER_SERVICE_JQR: 'joinQueueRequest',
     SERVER_SERVICE_LQR: 'leaveQueueRequest',
-    SERVER_SERVICE_GSP: 'gameProgress'
+    SERVER_SERVICE_GSP: 'gameProgress',
+    SERVER_SERVICE_REC: 'updateRecord'
 }
 
 const repliesConstants = {
@@ -26,6 +27,7 @@ const repliesConstants = {
     SERVER_REPLY_LQR01: 'LQR01',
     SERVER_REPLY_REG01: 'REG01',
     SERVER_REPLY_REG02: 'REG02',
+    SERVER_REPLY_REC01: 'REC01',
     SERVER_REPLY_UNK_CODE: 'UNK'
 };
 

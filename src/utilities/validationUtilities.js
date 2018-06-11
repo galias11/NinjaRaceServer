@@ -39,6 +39,11 @@ const loginRequestSchema = Joi.object().keys({
     pword: Joi.string().alphanum().required()
 });
 
+const registerRecordSchema = Joi.object().keys({
+    levelId: Joi.number().integer().required(),
+    time: Joi.number().required()
+});
+
 //TODO: add player token as required when in production
 const sessionConnValidationSchema = Joi.object().keys({
     type: Joi.number().valid(SESSION_SC_COMM_ACK).required(),
@@ -90,6 +95,7 @@ const schemas = {
     levelRequestSchema,
     loginRequestSchema,
     registerPlayerSchema,
+    registerRecordSchema,
     sessionConnValidationSchema,
     sessionLoadFinishSchema,
     sessionPlayerUpdateSchema,

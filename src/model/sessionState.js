@@ -308,6 +308,7 @@ class FinishedState extends SessionState {
 
     stateTransition() {
         webSocketTerminate(this.session.publisher);
+        this.session.updateRecords();
         process.exit(0);
     }
 

@@ -59,6 +59,29 @@ const insertStatement = (table, cols, values) => {
     return `INSERT INTO ${table} ${colsClause} VALUES ${valuesClause};`;
 }
 
+const updateStatement = (table, condition, values) => {
+    let setValues = [];
+    let setClause;
+
+    if(values.length) {
+        values.forEach(value => {
+            switch(value.type) {
+                case SERVER_DB_QUOTED_TYPE:
+                    setValues.push(`${value.col} = '${value.value}'`);
+                    break;
+                case SERVER_DB_NON_QUOTED_TYPE:
+                    setValues.push(`${value.col} = ${value.value}`);
+                    break;
+                default:
+                    break;
+            }
+        });
+        setClause = setValues.join(',');
+    }
+
+    return `UPDATE ${table} SET ${setClause} WHERE ${condition}`;
+}
+
 const mysqlQuery = (query, callback) => {
     mysqlConnection.query(query, (err, results) => {
         const response = {
@@ -80,5 +103,6 @@ const mysqlQuery = (query, callback) => {
 module.exports = {
     selectStatement,
     insertStatement,
-    mysqlQuery
+    mysqlQuery,
+    updateStatement
 };

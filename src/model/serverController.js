@@ -5,6 +5,7 @@ const {
     findPlayerById,
     findPlayerByEmail,
     findQueueById,
+    findRecordByLevelId,
     findSessionById,
     logger
 } = require('../utilities');
@@ -19,7 +20,9 @@ const {
     mapAvatars,
     mapLevels,
     mapPlayer,
-    savePlayer
+    mapRecords,
+    savePlayer,
+    saveRecord
 } = require('./serverMapper');
 
 // @Constants
@@ -33,10 +36,12 @@ const {
     SERVER_SERVICE_JQR,
     SERVER_SERVICE_LQR,
     SERVER_SERVICE_GSP,
+    SERVER_SERVICE_REC,
     SESSION_MIN_START_PLAYERS,
     OBSERVER_MSG_ACTION_ABORT,
     OBSERVER_MSG_ACTION_ADD_PLAYER,
-    OBSERVER_MSG_ACTION_END
+    OBSERVER_MSG_ACTION_END,
+    OBSERVER_MSG_ACTION_UPDATE_RECORD
 } = require('../constants');
 
 class Controller {
@@ -61,6 +66,7 @@ class Controller {
         this.logPlayer = this.logPlayer.bind(this);
         this.queueObserver = this.queueObserver.bind(this);
         this.registerPlayer = this.registerPlayer.bind(this);
+        this.registerRecord = this.registerRecord.bind(this);
         this.removePlayer = this.removePlayer.bind(this);
         this.removePlayerFromSession = this.removePlayerFromSession.bind(this);
         this.validateLevelData = this.validateLevelData.bind(this);
@@ -173,7 +179,8 @@ class Controller {
         if(data.notFound) {
             result = this.buildReplyData(SERVER_SERVICE_LOG, 2);
         } else {
-            const player = mapPlayer(data.playerData);
+            const records = mapRecords(data.playerRecordData, this.levels);
+            const player = mapPlayer(data.playerData, records);
             if(findPlayerByEmail(player.email, this.players)){
                 result = this.buildReplyData(SERVER_SERVICE_LOG, 1);
                 setTimeout(() => {
@@ -194,16 +201,20 @@ class Controller {
     }
 
     //Gets data from a particular level
-    getLevelData(levelId) {
+    getLevelData(levelId, playerId) {
         let levelData = this.levels.map(level => {
+            const player = findPlayerById(playerId, this.players);
             if((levelId && levelId == level.id) || !levelId) {
                 const queueStats = this.getQueueStats(level.id);
+                const playerRecord = player ? findRecordByLevelId(level.id, player.records) : undefined;
+                const time = playerRecord ? playerRecord.time : undefined; 
                 return {
                     id: level.id,
                     clientFile: level.clientFile,
                     available: level.available,
                     waitingPlayers: queueStats.waitingPlayers,
                     averageWaitingTime: queueStats.averageWaitingTime,
+                    personalRecord: time,
                     currentGames: this.getCurrentGameSessions(level.id)
                 }
             }
@@ -367,7 +378,7 @@ class Controller {
     }
 
     //Observes created game session events
-    gameSessionObserver(gameSession, action) {
+    gameSessionObserver(gameSession, action, data) {
         //Use only for testing purposes
         /*console.log(gameSession.players);*/
     
@@ -377,6 +388,9 @@ class Controller {
                 break;
             case OBSERVER_MSG_ACTION_END:
                 this.endSession(gameSession);
+                break;
+            case OBSERVER_MSG_ACTION_UPDATE_RECORD:
+                this.registerRecord(data.playerId, data.levelId, data.time, () => {});
                 break;
             default:
                 break;
@@ -416,6 +430,33 @@ class Controller {
         if(queue) {
             queue.removePlayer(playerId);
         }
+    }
+
+    //Registers a new record for a player and saves it to data base
+    async registerRecord(playerId, levelId, time, callback) {
+        const level = findLevel(levelId, this.levels);
+        const player = findPlayerById(playerId, this.players);
+        let reply;
+
+        if(level && player) {
+            const prevRecord = player.updateRecord(level, time);
+            const success = await saveRecord(playerId, levelId, time, prevRecord)
+                .then(response => {
+                    return response.sucess
+                }).catch(() => {
+                    return false;
+                });
+            if(success) {
+                reply = this.buildReplyData(SERVER_SERVICE_REC, 1);
+            } else {
+                player.record = prevRecord;
+                reply = this.buildReplyData(SERVER_SERVICE_CRO, 3);
+            }
+        } else {
+            reply = this.buildReplyData(SERVER_SERVICE_CRO, 2);
+        }
+
+        callback(reply);
     }
 
     //Enable the next methods only for testing

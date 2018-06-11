@@ -52,6 +52,15 @@ const findSessionById = (id, sessions) => {
     }
 };
 
+//Finds a record by its level id
+const findRecordByLevelId = (levelId, records) => {
+    if(records) {
+        return records.find(record => {
+            return record.level && record.level.id == levelId;
+        })
+    }
+}
+
 //Builds a message for IPC comm
 const buildMessage = (type, payload) => {
     return {
@@ -80,6 +89,7 @@ module.exports = {
     findPlayerById,
     findPlayerByEmail,
     findQueueById,
+    findRecordByLevelId,
     findSessionById,
     sanitizeData
 };

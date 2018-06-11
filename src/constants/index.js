@@ -31,6 +31,8 @@ const serverConstants = {
     SERVER_DB_NON_QUOTED_TYPE: 'NQT',
     SERVER_TABLE_LEVELS: 'level',
     SERVER_TABLE_PLAYER: 'player',
+    SERVER_TABLE_RECORD: 'record',
+    SERVER_TABLE_PLAYER_RECORDS: 'player LEFT JOIN record ON player.id = record.playerId',
     SERVER_TABLE_AVATAR: 'avatar',
     SESSION_STATE_INITIALIZED: 0,
     SESSION_STATE_VALIDATED: 1,

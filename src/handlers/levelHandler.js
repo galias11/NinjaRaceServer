@@ -18,7 +18,9 @@ async function handleLevelDataRequest(request, h) {
         response = h.response(buildAuthenticationReply());
     } else {
         if(validateData(request.query, schemas.levelRequestSchema)){
-            response = h.response(buildReply(request.server.methods.getLevelData(request.query.levelId)));
+            const session = request.auth.credentials;
+            const playerId = session.playerId;
+            response = h.response(buildReply(request.server.methods.getLevelData(request.query.levelId, playerId)));
         } else {
             response = h.response(buildBadRequestReply());
         }

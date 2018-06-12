@@ -32,7 +32,7 @@ class Player {
         this.sessionConnected = false;
         this.gameStartTime = 0.0;
         this.gameFinishTime = 0.0;
-        this.records = records;
+        this.records = records ? records : [];
 
         this.shouldUpdateRecord = this.shouldUpdateRecord.bind(this);
     }

@@ -18,7 +18,9 @@ async function handleLevelDataRequest(request, h) {
         response = h.response(buildAuthenticationReply());
     } else {
         if(validateData(request.query, schemas.levelRequestSchema)){
-            response = h.response(buildReply(request.server.methods.getLevelData(request.query.levelId)));
+            const session = request.auth.credentials;
+            const playerId = session.playerId;
+            response = h.response(buildReply(request.server.methods.getLevelData(request.query.levelId, playerId)));
         } else {
             response = h.response(buildBadRequestReply());
         }
@@ -43,10 +45,11 @@ async function handleQueueJoinRequest(request, h) {
             const playerId = session.playerId;
             const levelId = request.payload.levelId;
             const avatarId = request.payload.avatarId;
+            const colorId = request.payload.colorId;
             const nick = request.payload.nick;
 
             response = await new Promise((resolve) => {
-                request.server.methods.joinQueue(levelId, playerId, avatarId, nick, reply => {
+                request.server.methods.joinQueue(levelId, playerId, avatarId, nick, colorId, reply => {
                     resolve(reply);
                 })
             }).then(reply => {

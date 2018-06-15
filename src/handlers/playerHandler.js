@@ -64,6 +64,7 @@ async function handleLoginRequest(request, h) {
     return response
 }
 
+//Handles a logout request
 async function handleLogoutRequest(request, h) {
     logger(`logoutRequest received from: ${request.info.remoteAddress}:${request.info.remotePort}`);
 
@@ -88,8 +89,41 @@ async function handleLogoutRequest(request, h) {
     return response;
 }
 
+//Handles a player record register
+async function handleRecordRegisterRequest(request, h) {
+    logger(`registerRecordRequest received from: ${request.info.remoteAddress}:${request.info.remotePort}`);
+
+    let response;
+    if(!request.auth.isAuthenticated){
+        response = buildAuthenticationReply();
+    } else {
+        if(!validateData(request.payload, schemas.registerRecordSchema)) {
+            response = buildBadRequestReply();
+        } else {
+            const session = request.auth.credentials;
+            const playerId = session.playerId;
+            const levelId = request.payload.levelId;
+            const time = request.payload.time;
+
+            response = await new Promise((resolve) => {
+                request.server.methods.registerRecord(playerId, levelId, time, reply => {
+                    resolve(reply);
+                });
+            }).then(reply => {
+                return buildReply(reply);
+            }).catch(() => {
+                return buildFailureReply();
+            });
+        }
+    }
+
+    response = h.response(response);
+    return response;
+}
+
 module.exports = {
     handleLoginRequest,
     handleLogoutRequest,
+    handleRecordRegisterRequest,
     handleRegisterPlayerRequest
 }

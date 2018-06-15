@@ -8,6 +8,7 @@ const {
     SERVER_SERVICE_JQR,
     SERVER_SERVICE_LQR,
     SERVER_SERVICE_GSP,
+    SERVER_SERVICE_REC,
     SERVER_REPLY_CRO01,
     SERVER_REPLY_CRO02,
     SERVER_REPLY_CRO03,
@@ -151,6 +152,12 @@ const TES01 = () => ({
     }
 });
 
+const REC01 = () => ({
+    payload: {
+        success: true
+    }
+});
+
 //Builds a reply
 const buildReply = (reply) => {
     switch (reply.service) {
@@ -223,6 +230,13 @@ const buildReply = (reply) => {
             switch (reply.code) {
                 case 1:
                     return GSP01();
+                default:
+                    return UNKNOWN();
+            }
+        case SERVER_SERVICE_REC:
+            switch (reply.code) {
+                case 1:
+                    return REC01();
                 default:
                     return UNKNOWN();
             }

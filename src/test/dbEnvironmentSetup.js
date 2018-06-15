@@ -30,7 +30,7 @@ const RESET = `
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
     CREATE TABLE IF NOT EXISTS \`record\` (
-	    \`id\` int(10) NOT NULL auto_increment PRIMARY KEY,
+	    \`recordId\` int(10) NOT NULL auto_increment PRIMARY KEY,
         \`levelId\` int(4) NOT NULL,
         \`playerId\` int(10) NOT NULL,
         \`time\` DOUBLE NOT NULL

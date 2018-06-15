@@ -11,6 +11,7 @@ const {
 
 // @Constants
 const {
+    OBSERVER_MSG_ACTION_UPDATE_RECORD,
     SESSION_MIN_PLAYERS_ABORT,
     OBSERVER_MSG_ACTION_ABORT,
     OBSERVER_MSG_ACTION_END,
@@ -19,7 +20,7 @@ const {
     SESSION_MSG_TYPE_CREATED,
     SESSION_MSG_TYPE_END,
     SESSION_MSG_TYPE_ERR,
-    SESSION_MSG_TYPE_PLAYER_DISCONNECTED,
+    SESSION_MSG_TYPE_PLAYER_DISCONNECTED
 } = require('../constants');
 
 class GameSession {
@@ -120,7 +121,7 @@ class GameSession {
                     this.removePlayer(msg.payload.playerId);
                     break;
                 case SESSION_MSG_TYPE_END:
-                    this.finish();
+                    this.finish(msg.payload);
                     break;
                 case SESSION_MSG_TYPE_ABORT:
                     this.finish();
@@ -136,7 +137,17 @@ class GameSession {
     }
 
     //Successful end for the game session
-    finish() {
+    finish(playersTimes) {
+        if(playersTimes) {
+            this.players.forEach(player => {
+                const playerTime = playersTimes.find(time => 
+                    time.time && time.playerId == player.internalId
+                );
+                if(playerTime && player.shouldUpdateRecord(playerTime.levelId, playerTime.playerId)) {
+                    this.sessionObserver(this, OBSERVER_MSG_ACTION_UPDATE_RECORD, playerTime);
+                }
+            })
+        }
         this.players.forEach(player => {
             player.setInitialState();
         });

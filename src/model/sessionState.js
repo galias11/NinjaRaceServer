@@ -168,13 +168,13 @@ class ValidatedState extends SessionState {
     act() {
         this.session.players.forEach(sessionPlayer => {
             const playersData = this.session.players.filter(player => 
-                player.internalId == sessionPlayer.internalId
+                player.internalId != sessionPlayer.internalId
             ).map(player => {
                 return {
                     playerId: player.internalId,
                     avatarId: player.sessionAvatar.id,
-                    nick: player.sessionNick,
-                    colorId: player.colorId
+                    colorId: player.sessionColor,
+                    nick: player.sessionNick
                 };
             });
 
@@ -308,6 +308,7 @@ class FinishedState extends SessionState {
 
     stateTransition() {
         webSocketTerminate(this.session.publisher);
+        this.session.updateRecords();
         process.exit(0);
     }
 

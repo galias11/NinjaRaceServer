@@ -52,6 +52,7 @@ async function serverInitialize() {
     server.method('leaveQueue', controller.leaveQueue, {});
     server.method('removePlayerFromSession', controller.removePlayerFromSession, {});
     server.method('abortJoinQueue', controller.abortJoinQueue, {});
+    server.method('registerRecord', controller.registerRecord, {});
     //server.method('testMockLevels', controller.testMockLevels, {});
     //server.method('testMockPlayers', controller.testMockPlayers, {});
 
@@ -129,6 +130,14 @@ async function serverInitialize() {
             timeout: { socket: 600000, server: 540000 }
         },
         handler: handlers.handleQueueLeaveRequest
+    });
+
+    //Response to a registerRecord request
+    server.route({
+        method: SERVER_MAIN_METHOD_POST,
+        path: routes.UPDATE_RECORD,
+        config: authPolicy,
+        handler: handlers.handleRecordRegisterRequest
     });
 
     // Response to leaveSession request

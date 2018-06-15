@@ -1,5 +1,5 @@
 // @Vendor
-const getPort = require('get-port') //@get-port npm MIT licence
+const getPort = require('getport') //@getport npm MIT licence
 const sntp = require('sntp') //@sntp npm BSD-3-Clause
 const WebSocket = require('ws'); //@ws npm MIT license
 
@@ -11,13 +11,17 @@ const {
     NTP_PORT,
     NTP_REQUEST_TIMEOUT,
     NTP_RESOLVE_REFERENCE,
+    SERVER_MIN_AVAILABLE_PORT,
+    SERVER_MAX_AVAILABLE_PORT,
     webSocketPerMessageDeflateParams
 } = require('../constants');
 
 //Creates a publisher for a game session.
 const createPublisher = callback => {
-    getPort()
-        .then(port => {
+    getPort(SERVER_MIN_AVAILABLE_PORT, SERVER_MAX_AVAILABLE_PORT, (err, port) => {
+        if(err) {
+            callback(true);
+        } else {
             const wss = new WebSocket.Server({
                 port: port,
                 perMessageDeflate: webSocketPerMessageDeflateParams
@@ -26,10 +30,8 @@ const createPublisher = callback => {
                 pub: wss,
                 port: port
             });
-
-        }).catch(() => {
-            callback(true);
-        });
+        }
+    });
 };
 
 const webSocketSend = (player, payload, errorListener) => {

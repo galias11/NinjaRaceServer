@@ -22,7 +22,8 @@ const levelRequestSchema = Joi.object().keys({
 const joinQueueRequestSchema = Joi.object().keys({
     levelId: Joi.number().integer().required(),
     avatarId: Joi.number().integer().required(),
-    nick: Joi.string().min(1).max(16).required()
+    nick: Joi.string().min(1).max(16).required(),
+    colorId: Joi.number().integer().required()
 });
 
 const leaveQueueRequestSchema = Joi.object().keys({
@@ -36,6 +37,11 @@ const gameLeaveRequestSchema = Joi.object().keys({
 const loginRequestSchema = Joi.object().keys({
     email: Joi.string().email().required(),
     pword: Joi.string().alphanum().required()
+});
+
+const registerRecordSchema = Joi.object().keys({
+    levelId: Joi.number().integer().required(),
+    time: Joi.number().required()
 });
 
 //TODO: add player token as required when in production
@@ -89,6 +95,7 @@ const schemas = {
     levelRequestSchema,
     loginRequestSchema,
     registerPlayerSchema,
+    registerRecordSchema,
     sessionConnValidationSchema,
     sessionLoadFinishSchema,
     sessionPlayerUpdateSchema,

@@ -131,7 +131,7 @@ class SessionProccess {
                 break;
             case SESSION_STATE_FINISHED:
                 logger(`session ${sessionId} finished`);
-                process.send(buildMessage(SESSION_MSG_TYPE_END));
+                this.updateRecords();
                 break;
             case SESSION_STATE_ABORT:
                 logger(`session ${sessionId} was aborted`);
@@ -185,6 +185,19 @@ class SessionProccess {
     //Clears game loop interval
     clearGameLoopInterval() {
         clearInterval(this.gameLoop);
+    }
+
+    //Updates players records if necessary
+    updateRecords() {
+        const playersTimeData = this.players.map(player => {
+            return {
+                playerId: player.internalId,
+                levelId: this.level.id,
+                time: player.getGameTime()
+            }
+        });
+        const recordUpdateData = buildMessage(SESSION_MSG_TYPE_END, playersTimeData);
+        process.send(recordUpdateData);
     }
 }
 
